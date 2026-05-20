@@ -37,6 +37,13 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const scrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -68,9 +75,24 @@ export default function Home() {
             </div>
           </button>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-            <span>Agents</span>
-            <span>How it works</span>
-            <span>Pricing</span>
+            <button
+              onClick={() => scrollToSection("agents-section")}
+              className="hover:text-foreground transition-colors cursor-pointer"
+            >
+              Meet the Agents
+            </button>
+            <button
+              onClick={() => scrollToSection("features-section")}
+              className="hover:text-foreground transition-colors cursor-pointer"
+            >
+              How it works
+            </button>
+            <button
+              onClick={() => setLocation("/plan")}
+              className="hover:text-foreground transition-colors cursor-pointer"
+            >
+              Plan Your Trip
+            </button>
           </div>
           {isAuthenticated ? (
             <Button
@@ -159,7 +181,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="container py-16 border-t border-border/80">
+        <section id="agents-section" className="container py-16 border-t border-border/80">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">AI agents</p>
@@ -184,7 +206,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="container py-16 border-t border-border/80">
+        <section id="features-section" className="container py-16 border-t border-border/80">
           <div className="grid gap-6 md:grid-cols-3">
             {[
               { icon: <Wallet className="h-5 w-5" />, label: "Budget clarity", value: "Transparent daily costs" },
