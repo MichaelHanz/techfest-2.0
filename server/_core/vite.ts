@@ -21,7 +21,13 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
+  
+  // Skip Vite catch-all for Socket.IO paths
   app.use("*", async (req, res, next) => {
+    // Let Socket.IO handle its own paths
+    if (req.path.startsWith("/socket.io/")) {
+      return next();
+    }
     const url = req.originalUrl;
 
     try {
