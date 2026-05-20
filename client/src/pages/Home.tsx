@@ -7,18 +7,18 @@ import { Compass, Sparkles, Waves, MapPin, CloudSun, Wallet } from "lucide-react
 const AGENT_FEATURES = [
   {
     icon: Compass,
-    title: "Planner Agent",
-    text: "Builds a balanced itinerary around your pace, priorities, and travel dates.",
+    title: "Orchestrator Agent",
+    text: "Coordinates the overall trip planning process and delegates tasks to specialized sub-agents.",
   },
   {
     icon: Waves,
-    title: "Local Discovery Agent",
-    text: "Finds cozy cafés, local gems, and meaningful experiences beyond tourist crowds.",
+    title: "Travel & Culture Agent",
+    text: "Generates itineraries, recommends hotels, and curates local experiences and attractions.",
   },
   {
     icon: CloudSun,
     title: "Logistics Agent",
-    text: "Optimizes timing, transit, and weather windows so each day feels stress-free.",
+    text: "Calculates budgets in Malaysian Ringgit and checks weather conditions for optimal planning.",
   },
 ];
 
@@ -41,7 +41,11 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/80 bg-card/40 backdrop-blur-sm">
         <div className="container flex items-center justify-between py-6">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => setLocation("/")}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            aria-label="Home"
+          >
             <div className="h-10 w-10 rounded-2xl bg-accent/15 text-accent flex items-center justify-center">
               <Compass className="h-5 w-5" />
             </div>
@@ -49,7 +53,7 @@ export default function Home() {
               <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">Generative AI</p>
               <p className="text-lg font-semibold">Smart Travel Planner</p>
             </div>
-          </div>
+          </button>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <span>Agents</span>
             <span>How it works</span>
@@ -148,7 +152,7 @@ export default function Home() {
               <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">AI agents</p>
               <h2 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">A friendly team for every trip</h2>
             </div>
-            <p className="max-w-lg text-muted-foreground leading-relaxed">
+            <p className="max-w-lg text-slate-700 dark:text-slate-300 leading-relaxed">
               Each agent has one clear role, giving you a polished plan with thoughtful details and readable
               recommendations.
             </p>
