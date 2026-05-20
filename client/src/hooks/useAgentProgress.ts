@@ -27,7 +27,7 @@ export function useAgentProgress(sessionId: string | null) {
   useEffect(() => {
     if (!sessionId) return;
 
-    const socketUrl = process.env.VITE_FRONTEND_URL || window.location.origin;
+    const socketUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
     const newSocket = io(socketUrl, {
       reconnection: true,
       reconnectionDelay: 1000,
