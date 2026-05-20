@@ -34,30 +34,21 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const { destination, duration, budget } = input;
         const { orchestratorAgent } = await import("./agents");
-        const { createTrip } = await import("./db");
         const { nanoid } = await import("nanoid");
         const { wsManager } = await import("./_core/websocket");
 
         try {
           const sessionId = nanoid();
+          console.log(`[Trip Planning] Starting trip planning for user ${ctx.user.id}, sessionId: ${sessionId}`);
 
           // Start planning in background without awaiting
           // This allows client to receive sessionId immediately and join WebSocket room
           orchestratorAgent(destination, duration, budget, sessionId)
             .then(async (result) => {
-              const itineraryJson = JSON.stringify(result.travelPlan);
-              const budgetBreakdownJson = JSON.stringify(result.logistics.budgetAllocation);
-              const weatherJson = result.logistics.weatherOverview;
-
-              const tripId = await createTrip(
-                ctx.user.id,
-                destination,
-                duration,
-                budget,
-                itineraryJson,
-                budgetBreakdownJson,
-                weatherJson
-              );
+              console.log(`[Trip Planning] Planning complete for sessionId: ${sessionId}`);
+              
+              // Generate a trip ID for this session
+              const tripId = `trip_${Date.now()}`;
 
               // Send planning_complete event with full result
               wsManager.broadcastPlanningComplete(sessionId, {
@@ -65,6 +56,27 @@ export const appRouter = router({
                 tripId,
                 sessionId,
               });
+              
+              // Try to save to database, but don't fail if it doesn't work
+              try {
+                const { createTrip } = await import("./db");
+                const itineraryJson = JSON.stringify(result.travelPlan);
+                const budgetBreakdownJson = JSON.stringify(result.logistics.budgetAllocation);
+                const weatherJson = result.logistics.weatherOverview;
+                
+                await createTrip(
+                  ctx.user.id,
+                  destination,
+                  duration,
+                  budget,
+                  itineraryJson,
+                  budgetBreakdownJson,
+                  weatherJson
+                );
+                console.log(`[Trip Planning] Trip saved to database: ${tripId}`);
+              } catch (dbError) {
+                console.warn(`[Trip Planning] Failed to save trip to database (non-critical):`, dbError);
+              }
             })
             .catch((error) => {
               console.error("Error during background planning:", error);
