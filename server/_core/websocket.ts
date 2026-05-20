@@ -26,11 +26,12 @@ class WebSocketManager {
   initialize(httpServer: HTTPServer) {
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: process.env.VITE_FRONTEND_URL || "http://localhost:5173",
+        origin: true,
         methods: ["GET", "POST"],
         credentials: true,
       },
       transports: ["websocket", "polling"],
+      path: "/socket.io/",
     });
 
     this.io.on("connection", (socket) => {
