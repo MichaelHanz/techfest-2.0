@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
@@ -25,6 +26,16 @@ const AGENT_FEATURES = [
 export default function Home() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, loading } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   if (loading) {
     return (
@@ -39,7 +50,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/80 bg-card/40 backdrop-blur-sm">
+      <header className={`sticky top-0 z-50 border-b border-border/80 bg-card/40 backdrop-blur-sm transition-shadow duration-300 ${
+        isScrolled ? "shadow-md" : ""
+      }`}>
         <div className="container flex items-center justify-between py-6">
           <button
             onClick={() => setLocation("/")}
