@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
-import { Compass, ChevronLeft, Sparkles } from "lucide-react";
+import { Compass, ChevronLeft, Sparkles, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TripForm from "@/components/TripForm";
 import AgentNetworkStatus from "@/components/AgentNetworkStatus";
 import TripResults from "@/components/TripResults";
+import { getLoginUrl } from "@/const";
 
 type PlanningState = "form" | "planning" | "results";
 
@@ -57,6 +59,7 @@ export default function TripPlanningPage() {
     result: TripPlanResult;
   } | null>(null);
 
+  const { loading: authLoading, isAuthenticated } = useAuth({ redirectOnUnauthenticated: false });
   const planTrip = trpc.trips.plan.useMutation();
 
   useEffect(() => {
@@ -69,6 +72,12 @@ export default function TripPlanningPage() {
   }, []);
 
   const handlePlanTrip = async (destination: string, duration: number, budget: number) => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to plan a trip");
+      window.location.href = getLoginUrl();
+      return;
+    }
+
     setState("planning");
 
     try {
@@ -130,6 +139,19 @@ export default function TripPlanningPage() {
     setSessionId(null);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Sparkles className="w-8 h-8 text-accent" />
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Sticky Navbar */}
@@ -179,6 +201,31 @@ export default function TripPlanningPage() {
               transition={{ duration: 0.5 }}
               className="max-w-2xl mx-auto"
             >
+              {!isAuthenticated && (
+                <motion.div
+                  className="mb-8 p-6 bg-accent/10 border border-accent/30 rounded-lg"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="flex items-start gap-4">
+                    <LogIn className="w-5 h-5 text-accent mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground mb-2">Sign in to plan your trip</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Create an account or sign in to save your travel plans and access them anytime.
+                      </p>
+                      <Button
+                        onClick={() => (window.location.href = getLoginUrl())}
+                        className="gap-2"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        Sign In
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               <motion.div
                 className="mb-12"
                 initial={{ opacity: 0 }}

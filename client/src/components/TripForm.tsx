@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,18 +65,13 @@ export default function TripForm({ onSubmit, isLoading }: TripFormProps) {
     },
   };
 
-  const fieldVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: { opacity: 1, x: 0 },
-  };
-
   return (
     <motion.div
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      <Card className="w-full max-w-2xl mx-auto p-8 bg-gradient-to-br from-card to-card/80 border-border/50 shadow-xl backdrop-blur-sm">
+      <Card className="w-full max-w-2xl mx-auto p-8 bg-card border-border/50 shadow-xl">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Destination Field */}
           <motion.div className="space-y-3" variants={itemVariants}>
@@ -91,36 +86,22 @@ export default function TripForm({ onSubmit, isLoading }: TripFormProps) {
                 Destination
               </Label>
             </div>
-            <motion.div
-              variants={fieldVariants}
-              animate={focusedField === "destination" ? "visible" : "hidden"}
-              className="relative"
-            >
-              <Input
-                id="destination"
-                type="text"
-                placeholder="e.g., Tokyo, Paris, Bali"
-                value={destination}
-                onChange={(e) => {
-                  setDestination(e.target.value);
-                  if (errors.destination) {
-                    setErrors({ ...errors, destination: "" });
-                  }
-                }}
-                onFocus={() => setFocusedField("destination")}
-                onBlur={() => setFocusedField(null)}
-                disabled={isLoading}
-                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all duration-200"
-              />
-              {focusedField === "destination" && (
-                <motion.div
-                  className="absolute inset-0 rounded-md border border-accent/50 pointer-events-none"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                />
-              )}
-            </motion.div>
+            <Input
+              id="destination"
+              type="text"
+              placeholder="e.g., Tokyo, Paris, Bali"
+              value={destination}
+              onChange={(e) => {
+                setDestination(e.target.value);
+                if (errors.destination) {
+                  setErrors({ ...errors, destination: "" });
+                }
+              }}
+              onFocus={() => setFocusedField("destination")}
+              onBlur={() => setFocusedField(null)}
+              disabled={isLoading}
+              className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all duration-200"
+            />
             <AnimatePresence>
               {errors.destination && (
                 <motion.div
@@ -151,38 +132,24 @@ export default function TripForm({ onSubmit, isLoading }: TripFormProps) {
                   Duration (Days)
                 </Label>
               </div>
-              <motion.div
-                variants={fieldVariants}
-                animate={focusedField === "duration" ? "visible" : "hidden"}
-                className="relative"
-              >
-                <Input
-                  id="duration"
-                  type="number"
-                  placeholder="e.g., 5"
-                  min="1"
-                  max="365"
-                  value={duration}
-                  onChange={(e) => {
-                    setDuration(e.target.value);
-                    if (errors.duration) {
-                      setErrors({ ...errors, duration: "" });
-                    }
-                  }}
-                  onFocus={() => setFocusedField("duration")}
-                  onBlur={() => setFocusedField(null)}
-                  disabled={isLoading}
-                  className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all duration-200"
-                />
-                {focusedField === "duration" && (
-                  <motion.div
-                    className="absolute inset-0 rounded-md border border-accent/50 pointer-events-none"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  />
-                )}
-              </motion.div>
+              <Input
+                id="duration"
+                type="number"
+                placeholder="e.g., 5"
+                min="1"
+                max="365"
+                value={duration}
+                onChange={(e) => {
+                  setDuration(e.target.value);
+                  if (errors.duration) {
+                    setErrors({ ...errors, duration: "" });
+                  }
+                }}
+                onFocus={() => setFocusedField("duration")}
+                onBlur={() => setFocusedField(null)}
+                disabled={isLoading}
+                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all duration-200"
+              />
               <AnimatePresence>
                 {errors.duration && (
                   <motion.div
@@ -211,38 +178,24 @@ export default function TripForm({ onSubmit, isLoading }: TripFormProps) {
                   Budget (RM)
                 </Label>
               </div>
-              <motion.div
-                variants={fieldVariants}
-                animate={focusedField === "budget" ? "visible" : "hidden"}
-                className="relative"
-              >
-                <Input
-                  id="budget"
-                  type="number"
-                  placeholder="e.g., RM 2000"
-                  min="0"
-                  step="0.01"
-                  value={budget}
-                  onChange={(e) => {
-                    setBudget(e.target.value);
-                    if (errors.budget) {
-                      setErrors({ ...errors, budget: "" });
-                    }
-                  }}
-                  onFocus={() => setFocusedField("budget")}
-                  onBlur={() => setFocusedField(null)}
-                  disabled={isLoading}
-                  className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all duration-200"
-                />
-                {focusedField === "budget" && (
-                  <motion.div
-                    className="absolute inset-0 rounded-md border border-accent/50 pointer-events-none"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  />
-                )}
-              </motion.div>
+              <Input
+                id="budget"
+                type="number"
+                placeholder="e.g., RM 2000"
+                min="0"
+                step="0.01"
+                value={budget}
+                onChange={(e) => {
+                  setBudget(e.target.value);
+                  if (errors.budget) {
+                    setErrors({ ...errors, budget: "" });
+                  }
+                }}
+                onFocus={() => setFocusedField("budget")}
+                onBlur={() => setFocusedField(null)}
+                disabled={isLoading}
+                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all duration-200"
+              />
               <AnimatePresence>
                 {errors.budget && (
                   <motion.div
@@ -268,7 +221,7 @@ export default function TripForm({ onSubmit, isLoading }: TripFormProps) {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:from-accent/90 hover:to-accent/70 font-semibold uppercase tracking-wider py-6 text-base transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed gap-2"
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold uppercase tracking-wider py-6 text-base transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed gap-2"
             >
               <motion.div
                 animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
@@ -294,6 +247,3 @@ export default function TripForm({ onSubmit, isLoading }: TripFormProps) {
     </motion.div>
   );
 }
-
-// Add AnimatePresence import
-import { AnimatePresence } from "framer-motion";
