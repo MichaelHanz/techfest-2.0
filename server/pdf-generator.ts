@@ -68,7 +68,7 @@ export async function generateTripPDF(data: TripPDFData): Promise<Buffer> {
   pdf.setFontSize(10);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(mutedText[0], mutedText[1], mutedText[2]);
-  pdf.text(`${data.duration} DAYS | BUDGET: ${data.budget.toLocaleString()}`, 20, 32);
+  pdf.text(`${data.duration} DAYS | BUDGET: RM ${data.budget.toLocaleString()}`, 20, 32);
 
   yPosition = 50;
 
@@ -202,7 +202,8 @@ export async function generateTripPDF(data: TripPDFData): Promise<Buffer> {
       pdf.setTextColor(mutedText[0], mutedText[1], mutedText[2]);
       pdf.setFontSize(9);
       pdf.setFont("helvetica", "normal");
-      pdf.text(`${hotel.type} | ${hotel.location} | ${hotel.pricePerNight}`, 20, yPosition + 6);
+      const priceDisplay = hotel.pricePerNight.includes('RM') ? hotel.pricePerNight : `RM ${hotel.pricePerNight}`;
+      pdf.text(`${hotel.type} | ${hotel.location} | ${priceDisplay}`, 20, yPosition + 6);
 
       yPosition += 12;
 
@@ -293,30 +294,30 @@ export async function generateTripPDF(data: TripPDFData): Promise<Buffer> {
 
   // Budget table
   const budgetRows = [
-    ["Category", "Amount", "Percentage"],
+    ["Category", "Amount (RM)", "Percentage"],
     [
       "Accommodation",
-      `${data.budgetAllocation.accommodation.toLocaleString()}`,
+      `RM ${data.budgetAllocation.accommodation.toLocaleString()}`,
       `${((data.budgetAllocation.accommodation / data.budget) * 100).toFixed(1)}%`,
     ],
     [
       "Food",
-      `${data.budgetAllocation.food.toLocaleString()}`,
+      `RM ${data.budgetAllocation.food.toLocaleString()}`,
       `${((data.budgetAllocation.food / data.budget) * 100).toFixed(1)}%`,
     ],
     [
       "Transport",
-      `${data.budgetAllocation.transport.toLocaleString()}`,
+      `RM ${data.budgetAllocation.transport.toLocaleString()}`,
       `${((data.budgetAllocation.transport / data.budget) * 100).toFixed(1)}%`,
     ],
     [
       "Activities",
-      `${data.budgetAllocation.activities.toLocaleString()}`,
+      `RM ${data.budgetAllocation.activities.toLocaleString()}`,
       `${((data.budgetAllocation.activities / data.budget) * 100).toFixed(1)}%`,
     ],
     [
       "Contingency",
-      `${data.budgetAllocation.contingency.toLocaleString()}`,
+      `RM ${data.budgetAllocation.contingency.toLocaleString()}`,
       `${((data.budgetAllocation.contingency / data.budget) * 100).toFixed(1)}%`,
     ],
   ];

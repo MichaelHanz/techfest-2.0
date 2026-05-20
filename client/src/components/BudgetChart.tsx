@@ -34,7 +34,7 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
         <div className="bg-card border border-border p-3 rounded-none">
           <p className="text-sm font-semibold text-foreground">{payload[0].name}</p>
           <p className="text-sm text-accent font-bold">
-            {value.toLocaleString()} ({percentage}%)
+            RM {value.toLocaleString()} ({percentage}%)
           </p>
         </div>
       );
@@ -103,7 +103,7 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {item.value.toLocaleString()} / {totalBudget.toLocaleString()}
+                  RM {item.value.toLocaleString()} / RM {totalBudget.toLocaleString()}
                 </div>
               </div>
             ))}
@@ -114,7 +114,7 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
                   Total Budget
                 </span>
                 <span className="text-lg font-black text-accent">
-                  {totalBudget.toLocaleString()}
+                  RM {totalBudget.toLocaleString()}
                 </span>
               </div>
             </div>

@@ -102,12 +102,12 @@ export default function TripForm({ onSubmit, isLoading }: TripFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="budget" className="text-sm font-semibold uppercase tracking-wide text-foreground">
-              Budget
+              Budget (RM)
             </Label>
             <Input
               id="budget"
               type="number"
-              placeholder="e.g., 2000"
+              placeholder="e.g., RM 2000"
               min="0"
               step="0.01"
               value={budget}

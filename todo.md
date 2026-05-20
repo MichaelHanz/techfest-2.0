@@ -66,3 +66,15 @@
 - [x] Integrate AgentNetworkStatus into TripPlanningPage loading state
 - [x] Test animations and ensure smooth performance
 - [x] Update checkpoint with AgentNetworkStatus feature
+
+
+## Malaysian Ringgit (RM) Currency Localization
+- [x] Update Logistics Agent prompt to enforce RM currency in all calculations
+- [x] Update Travel & Culture Agent prompt to format prices in RM
+- [x] Update TripForm component budget input label and placeholder for RM
+- [x] Update BudgetChart component to display RM formatting
+- [x] Update ItineraryTimeline component to display RM formatting for hotel prices
+- [x] Update TripResults component to display RM formatting
+- [x] Update PDF export to display RM currency
+- [x] Test all currency displays across the application
+- [x] Verify backend returns RM values correctly

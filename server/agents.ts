@@ -88,11 +88,13 @@ export async function travelCultureAgent(
 authentic travel itineraries that balance popular attractions with local experiences. You provide practical 
 recommendations for accommodations, dining, and activities that match the traveler's budget and interests.`;
 
-  const userPrompt = `Plan a ${duration}-day trip to ${destination} with a budget of ${budget} currency units.
+  const userPrompt = `Plan a ${duration}-day trip to ${destination} with a budget of RM ${budget}.
+
+**IMPORTANT: All prices and budget amounts MUST be in Malaysian Ringgit (RM). Do not use any other currency.**
 
 Provide a comprehensive travel plan including:
 1. A day-by-day itinerary with specific activities, meal recommendations, and local insights
-2. 3-4 hotel recommendations with price ranges and highlights
+2. 3-4 hotel recommendations with price ranges in RM and highlights
 3. 5-7 must-try local foods and dishes
 4. 8-10 top attractions and experiences
 
@@ -111,7 +113,7 @@ Format your response as a valid JSON object with the following structure:
     {
       "name": "Hotel name",
       "type": "Budget/Mid-range/Luxury",
-      "pricePerNight": "Price range",
+      "pricePerNight": "Price range in RM (e.g., RM 150-200)",
       "highlights": ["feature 1", "feature 2"],
       "location": "Location in city"
     }
@@ -207,17 +209,19 @@ weather insights and create realistic budget allocations that align with the tra
     .map((h) => `${h.name} (${h.type}): ${h.pricePerNight} per night`)
     .join(", ");
 
-  const userPrompt = `For a ${duration}-day trip to ${destination} with a total budget of ${budget} currency units:
+  const userPrompt = `For a ${duration}-day trip to ${destination} with a total budget of RM ${budget}:
+
+**CRITICAL: All budget calculations and allocations MUST be in Malaysian Ringgit (RM). Do not use USD or any other currency.**
 
 Available hotels: ${hotelInfo}
 
 Provide:
 1. A brief weather overview for the destination (what to expect, what to pack)
 2. A realistic budget breakdown allocating the total budget across:
-   - Accommodation (based on hotel prices)
-   - Food and dining
-   - Local transport and activities
-   - Contingency/miscellaneous
+   - Accommodation (based on hotel prices in RM)
+   - Food and dining (in RM)
+   - Local transport and activities (in RM)
+   - Contingency/miscellaneous (in RM)
 
 Format your response as a valid JSON object with the following structure:
 {
@@ -232,7 +236,7 @@ Format your response as a valid JSON object with the following structure:
   "recommendations": ["recommendation 1", "recommendation 2"]
 }
 
-Ensure the budget allocation sums to approximately ${budget}.`;
+**All numbers in budgetAllocation MUST be in RM and should sum to approximately RM ${budget}.**`;
 
   const response = await invokeLLM({
     messages: [

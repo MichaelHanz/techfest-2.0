@@ -90,7 +90,7 @@ export default function TripResults({
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Budget
                 </p>
-                <p className="text-2xl font-black text-foreground">{budget.toLocaleString()}</p>
+                <p className="text-2xl font-black text-foreground">RM {budget.toLocaleString()}</p>
               </div>
             </div>
           </Card>
@@ -135,7 +135,9 @@ export default function TripResults({
                 </div>
               </div>
 
-              <p className="text-lg font-black text-accent mb-3">{hotel.pricePerNight}</p>
+              <p className="text-lg font-black text-accent mb-3">
+                {hotel.pricePerNight.includes('RM') ? hotel.pricePerNight : `RM ${hotel.pricePerNight}`}
+              </p>
 
               <ul className="space-y-1">
                 {hotel.highlights.map((highlight, hIdx) => (
