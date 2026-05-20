@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { Compass, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import TripForm from "@/components/TripForm";
 import AgentNetworkStatus from "@/components/AgentNetworkStatus";
 import TripResults from "@/components/TripResults";
@@ -45,6 +47,7 @@ export default function TripPlanningPage() {
   const [, setLocation] = useLocation();
   const [state, setState] = useState<PlanningState>("form");
   const [currentAgent, setCurrentAgent] = useState<string>();
+  const [isScrolled, setIsScrolled] = useState(false);
   const [tripData, setTripData] = useState<{
     destination: string;
     duration: number;
@@ -54,6 +57,15 @@ export default function TripPlanningPage() {
   } | null>(null);
 
   const planTrip = trpc.trips.plan.useMutation();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handlePlanTrip = async (destination: string, duration: number, budget: number) => {
     setState("planning");
@@ -113,6 +125,36 @@ export default function TripPlanningPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Sticky Navbar */}
+      <header className={`sticky top-0 z-50 border-b border-border/80 bg-card/40 backdrop-blur-sm transition-shadow duration-300 ${
+        isScrolled ? "shadow-md" : ""
+      }`}>
+        <div className="container flex items-center justify-between py-6">
+          <button
+            onClick={() => setLocation("/")}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            aria-label="Home"
+          >
+            <div className="h-10 w-10 rounded-2xl bg-accent/15 text-accent flex items-center justify-center">
+              <Compass className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">Generative AI</p>
+              <p className="text-lg font-semibold">Smart Travel Planner</p>
+            </div>
+          </button>
+          <Button
+            onClick={() => setLocation("/")}
+            variant="outline"
+            className="rounded-full px-6 gap-2 border-border/80 bg-card/60 hover:bg-card"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back to Home
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Content */}
       <div className="container py-12">
         {state === "form" && (
           <div className="space-y-8">
