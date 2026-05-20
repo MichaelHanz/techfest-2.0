@@ -322,7 +322,7 @@ export default function AgentNetworkStatus({ sessionId }: AgentNetworkStatusProp
 
               return (
                 <motion.div
-                  key={event.timestamp}
+                  key={`${event.timestamp}-${index}`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
