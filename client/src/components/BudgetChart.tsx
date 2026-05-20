@@ -23,17 +23,23 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
     { name: "Contingency", value: budgetAllocation.contingency },
   ].filter((item) => item.value > 0);
 
-  // Monochromatic grayscale palette for industrial aesthetic
-  const COLORS = ["oklch(0.4 0 0)", "oklch(0.5 0 0)", "oklch(0.6 0 0)", "oklch(0.7 0 0)", "oklch(0.8 0 0)"];
+  // Bright, vibrant color palette for budget categories
+  const COLORS = [
+    "#FF8C42",   // Warm orange for Accommodation
+    "#2ECC71",   // Fresh green for Food
+    "#3498DB",   // Vibrant blue for Transport
+    "#E74C3C",   // Coral red for Activities
+    "#9B59B6",   // Purple for Contingency
+  ];
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const value = payload[0].value;
       const percentage = ((value / totalBudget) * 100).toFixed(1);
       return (
-        <div className="bg-card border border-border p-3 rounded-none">
+        <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
           <p className="text-sm font-semibold text-foreground">{payload[0].name}</p>
-          <p className="text-sm text-accent font-bold">
+          <p className="text-sm font-bold" style={{ color: payload[0].fill }}>
             RM {value.toLocaleString()} ({percentage}%)
           </p>
         </div>
@@ -54,18 +60,20 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
       <Card className="p-8 bg-card border-border">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Chart */}
-          <div className="lg:col-span-2 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={300}>
+          <div className="lg:col-span-2 flex items-center justify-center bg-gradient-to-br from-background/30 to-muted/20 p-6 rounded-lg">
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
+                  labelLine={true}
+                  label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  outerRadius={120}
+                  innerRadius={40}
                   fill="#ffffff"
                   dataKey="value"
+                  paddingAngle={2}
                 >
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -75,6 +83,7 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
                 <Legend
                   verticalAlign="bottom"
                   height={36}
+                  wrapperStyle={{ paddingTop: "20px" }}
                   formatter={(value) => (
                     <span className="text-sm text-foreground font-medium">{value}</span>
                   )}
@@ -89,21 +98,21 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
               Allocation Details
             </h3>
             {data.map((item, index) => (
-              <div key={item.name} className="space-y-1">
+              <div key={item.name} className="space-y-1 p-3 rounded-lg bg-muted/20 border border-border/50 hover:border-border transition-colors">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <div
-                      className="w-3 h-3"
+                      className="w-4 h-4 rounded-full shadow-md"
                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
                     />
                     <span className="text-sm font-medium text-foreground">{item.name}</span>
                   </div>
-                  <span className="text-sm font-bold text-accent">
+                  <span className="text-sm font-bold" style={{ color: COLORS[index % COLORS.length] }}>
                     {((item.value / totalBudget) * 100).toFixed(1)}%
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  RM {item.value.toLocaleString()} / RM {totalBudget.toLocaleString()}
+                  RM {item.value.toLocaleString()}
                 </div>
               </div>
             ))}
