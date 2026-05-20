@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import TripForm from "@/components/TripForm";
-import AgentStatus from "@/components/AgentStatus";
+import AgentNetworkStatus from "@/components/AgentNetworkStatus";
 import TripResults from "@/components/TripResults";
 
 type PlanningState = "form" | "planning" | "results";
@@ -143,20 +143,7 @@ export default function TripPlanningPage() {
 
         {state === "planning" && (
           <div className="space-y-8">
-            <div>
-              <h1 className="text-5xl font-black uppercase tracking-tighter text-foreground mb-2">
-                Creating Your Plan
-              </h1>
-              <div className="w-24 h-1.5 bg-accent" />
-            </div>
-
-            <AgentStatus isActive={true} currentAgent={currentAgent} />
-
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Our multi-agent system is orchestrating your personalized travel plan...
-              </p>
-            </div>
+            <AgentNetworkStatus />
           </div>
         )}
 
