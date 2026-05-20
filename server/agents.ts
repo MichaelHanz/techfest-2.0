@@ -117,9 +117,10 @@ export async function travelCultureAgent(
   };
 
   broadcastEvent("Travel & Culture: Starting itinerary generation", "agent_start");
+  broadcastEvent("Travel & Culture: Analyzing destination characteristics and local culture");
 
   const systemPrompt = `You are an expert travel planner and cultural guide. Your role is to create detailed, 
-authentic travel itineraries that balance popular attractions with local experiences. You provide practical 
+authenticate travel itineraries that balance popular attractions with local experiences. You provide practical 
 recommendations for accommodations, dining, and activities that match the traveler's budget and interests.`;
 
   const userPrompt = `Plan a ${duration}-day trip to ${destination} with a budget of RM ${budget}.
@@ -156,7 +157,8 @@ Format your response as a valid JSON object with the following structure:
   "attractions": ["attraction 1", "attraction 2"]
 }`;
 
-  broadcastEvent("Travel & Culture: Generating detailed itinerary and recommendations");
+  broadcastEvent("Travel & Culture: Querying LLM for itinerary generation");
+  broadcastEvent("Travel & Culture: Generating day-by-day activities and meal plans");
 
   const response = await invokeLLM({
     messages: [
@@ -218,6 +220,8 @@ Format your response as a valid JSON object with the following structure:
   }
 
   const parsed = JSON.parse(content);
+  broadcastEvent("Travel & Culture: Processing hotel recommendations");
+  broadcastEvent("Travel & Culture: Curating local food and attraction suggestions");
   broadcastEvent("Travel & Culture: Itinerary generation complete", "agent_complete");
 
   return {
@@ -253,6 +257,7 @@ export async function logisticsAgent(
   };
 
   broadcastEvent("Logistics: Starting budget and weather analysis", "agent_start");
+  broadcastEvent("Logistics: Analyzing weather patterns and seasonal conditions");
 
   const systemPrompt = `You are a logistics and budget planning expert. Your role is to provide practical 
 weather insights and create realistic budget allocations that align with the travel plan and destination costs.`;
@@ -291,6 +296,10 @@ Format your response as a valid JSON object with the following structure:
 **All numbers in budgetAllocation MUST be in RM and should sum to approximately RM ${budget}.**`;
 
   broadcastEvent("Logistics: Calculating budget allocation and weather forecast");
+  broadcastEvent("Logistics: Analyzing accommodation costs and hotel pricing");
+  broadcastEvent("Logistics: Computing food and dining expenses");
+  broadcastEvent("Logistics: Estimating transport and activity costs");
+  broadcastEvent("Logistics: Querying LLM for final budget breakdown");
 
   const response = await invokeLLM({
     messages: [
@@ -334,6 +343,8 @@ Format your response as a valid JSON object with the following structure:
   }
 
   const parsed = JSON.parse(content);
+  broadcastEvent("Logistics: Validating budget allocation totals");
+  broadcastEvent("Logistics: Generating travel recommendations");
   broadcastEvent("Logistics: Budget and weather analysis complete", "agent_complete");
 
   return {
