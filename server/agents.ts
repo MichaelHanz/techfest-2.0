@@ -160,7 +160,8 @@ Format your response as a valid JSON object with the following structure:
   broadcastEvent("Travel & Culture: Querying LLM for itinerary generation");
   broadcastEvent("Travel & Culture: Generating day-by-day activities and meal plans");
 
-  const response = await invokeLLM({
+  try {
+    const response = await invokeLLM({
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -213,23 +214,29 @@ Format your response as a valid JSON object with the following structure:
     },
   });
 
-  // Parse the JSON response from the LLM
-  const content = response.choices[0]?.message.content;
-  if (!content || typeof content !== "string") {
-    throw new Error("No response from Travel & Culture Agent");
+    // Parse the JSON response from the LLM
+    const content = response.choices[0]?.message.content;
+    if (!content || typeof content !== "string") {
+      throw new Error("No response from Travel & Culture Agent");
+    }
+
+    const parsed = JSON.parse(content);
+    broadcastEvent("Travel & Culture: Processing hotel recommendations");
+    broadcastEvent("Travel & Culture: Curating local food and attraction suggestions");
+    broadcastEvent("Travel & Culture: Itinerary generation complete", "agent_complete");
+
+    return {
+      itinerary: parsed.itinerary,
+      hotels: parsed.hotels,
+      localFood: parsed.localFood,
+      attractions: parsed.attractions,
+    };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("[Travel & Culture Agent] Error:", errorMsg);
+    broadcastEvent(`Travel & Culture: ERROR - ${errorMsg}`, "agent_error");
+    throw error;
   }
-
-  const parsed = JSON.parse(content);
-  broadcastEvent("Travel & Culture: Processing hotel recommendations");
-  broadcastEvent("Travel & Culture: Curating local food and attraction suggestions");
-  broadcastEvent("Travel & Culture: Itinerary generation complete", "agent_complete");
-
-  return {
-    itinerary: parsed.itinerary,
-    hotels: parsed.hotels,
-    localFood: parsed.localFood,
-    attractions: parsed.attractions,
-  };
 }
 
 /**
@@ -301,7 +308,8 @@ Format your response as a valid JSON object with the following structure:
   broadcastEvent("Logistics: Estimating transport and activity costs");
   broadcastEvent("Logistics: Querying LLM for final budget breakdown");
 
-  const response = await invokeLLM({
+  try {
+    const response = await invokeLLM({
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -336,20 +344,26 @@ Format your response as a valid JSON object with the following structure:
     },
   });
 
-  // Parse the JSON response from the LLM
-  const content = response.choices[0]?.message.content;
-  if (!content || typeof content !== "string") {
-    throw new Error("No response from Logistics Agent");
+    // Parse the JSON response from the LLM
+    const content = response.choices[0]?.message.content;
+    if (!content || typeof content !== "string") {
+      throw new Error("No response from Logistics Agent");
+    }
+
+    const parsed = JSON.parse(content);
+    broadcastEvent("Logistics: Validating budget allocation totals");
+    broadcastEvent("Logistics: Generating travel recommendations");
+    broadcastEvent("Logistics: Budget and weather analysis complete", "agent_complete");
+
+      return {
+        weatherOverview: parsed.weatherOverview,
+        budgetAllocation: parsed.budgetAllocation,
+        recommendations: parsed.recommendations,
+      };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("[Logistics Agent] Error:", errorMsg);
+    broadcastEvent(`Logistics: ERROR - ${errorMsg}`, "agent_error");
+    throw error;
   }
-
-  const parsed = JSON.parse(content);
-  broadcastEvent("Logistics: Validating budget allocation totals");
-  broadcastEvent("Logistics: Generating travel recommendations");
-  broadcastEvent("Logistics: Budget and weather analysis complete", "agent_complete");
-
-  return {
-    weatherOverview: parsed.weatherOverview,
-    budgetAllocation: parsed.budgetAllocation,
-    recommendations: parsed.recommendations,
-  };
 }
