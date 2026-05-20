@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { MapPin, Utensils, FileText, ChevronDown } from "lucide-react";
+import { MapPin, Utensils, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 interface ItineraryDay {
   day: number;
@@ -35,10 +36,36 @@ export default function ItineraryTimeline({ itinerary }: ItineraryTimelineProps)
   return (
     <div className="w-full space-y-4">
       <div className="mb-8">
-        <h2 className="text-3xl font-black uppercase tracking-tighter text-foreground">
-          Your Itinerary
-        </h2>
-        <div className="w-16 h-1 bg-accent mt-3" />
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-black uppercase tracking-tighter text-foreground">
+              Your Itinerary
+            </h2>
+            <div className="w-16 h-1 bg-accent mt-3" />
+          </div>
+          
+          {/* Expand/Collapse All buttons */}
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setExpandedDays(new Set(itinerary.map((day) => day.day)))}
+              variant="outline"
+              size="sm"
+              className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+            >
+              <ChevronDown className="w-4 h-4 mr-1" />
+              Expand All
+            </Button>
+            <Button
+              onClick={() => setExpandedDays(new Set())}
+              variant="outline"
+              size="sm"
+              className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+            >
+              <ChevronUp className="w-4 h-4 mr-1" />
+              Collapse All
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Timeline container */}
