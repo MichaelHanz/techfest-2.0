@@ -46,7 +46,6 @@ interface TripPlanResult {
 export default function TripPlanningPage() {
   const [, setLocation] = useLocation();
   const [state, setState] = useState<PlanningState>("form");
-  const [currentAgent, setCurrentAgent] = useState<string>();
   const [isScrolled, setIsScrolled] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [tripData, setTripData] = useState<{
@@ -70,32 +69,37 @@ export default function TripPlanningPage() {
 
   const handlePlanTrip = async (destination: string, duration: number, budget: number) => {
     setState("planning");
-    setCurrentAgent("Orchestrator");
 
     try {
-      // Simulate agent progression for UI feedback
-      const agentSequence = ["Orchestrator", "Travel & Culture", "Logistics"];
-      let agentIndex = 0;
-
-      const agentInterval = setInterval(() => {
-        agentIndex++;
-        if (agentIndex < agentSequence.length) {
-          setCurrentAgent(agentSequence[agentIndex]);
-        } else {
-          clearInterval(agentInterval);
-        }
-      }, 2000);
-
-      const result = await planTrip.mutateAsync({
+      // Initiate trip planning - returns sessionId immediately
+      const response = await planTrip.mutateAsync({
         destination,
         duration,
         budget,
       });
 
-      clearInterval(agentInterval);
+      const newSessionId = (response as { sessionId: string }).sessionId;
+      setSessionId(newSessionId);
 
-      const planResult = result as TripPlanResult & { sessionId: string };
-      setSessionId(planResult.sessionId);
+      // Wait for planning_complete event via WebSocket
+      // The AgentNetworkStatus component will handle real-time updates
+      const planningCompletePromise = new Promise<TripPlanResult & { tripId: number }>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error("Planning timeout"));
+        }, 300000); // 5 minute timeout
+
+        // Listen for planning_complete event
+        const handlePlanningComplete = ((event: any) => {
+          clearTimeout(timeout);
+          window.removeEventListener(`planning-complete-${newSessionId}`, handlePlanningComplete as EventListener);
+          resolve(event.detail);
+        }) as EventListener;
+
+        window.addEventListener(`planning-complete-${newSessionId}`, handlePlanningComplete);
+      });
+
+      const planResult = await planningCompletePromise;
+
       setTripData({
         destination,
         duration,
@@ -108,7 +112,7 @@ export default function TripPlanningPage() {
       toast.success("Trip plan created successfully!");
     } catch (error) {
       setState("form");
-      setCurrentAgent(undefined);
+      setSessionId(null);
       toast.error("Failed to plan trip. Please try again.");
       console.error(error);
     }
@@ -122,7 +126,7 @@ export default function TripPlanningPage() {
   const handleNewTrip = () => {
     setState("form");
     setTripData(null);
-    setCurrentAgent(undefined);
+    setSessionId(null);
   };
 
   return (
@@ -148,63 +152,70 @@ export default function TripPlanningPage() {
           <Button
             onClick={() => setLocation("/")}
             variant="outline"
-            className="rounded-full px-6 gap-2 border-border/80 bg-card/60 hover:bg-card"
+            className="gap-2"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="w-4 h-4" />
             Back to Home
           </Button>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="container py-12">
+      <main className="container py-12">
         {state === "form" && (
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-5xl font-black uppercase tracking-tighter text-foreground mb-2">
-                Plan Your Trip
-              </h1>
-              <div className="w-24 h-1.5 bg-accent" />
-              <p className="text-muted-foreground mt-4 max-w-2xl">
-                Tell us where you want to go, how long you'll stay, and your budget. We will
-                create a personalized itinerary, recommend hotels, suggest local foods, and break down
-                your budget across accommodation, food, transport, and activities.
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold mb-2">Plan Your Trip</h1>
+              <p className="text-muted-foreground">
+                Let our AI agents create a personalized itinerary and budget plan for your journey.
               </p>
             </div>
-
             <TripForm onSubmit={handlePlanTrip} isLoading={planTrip.isPending} />
-
-            <div className="pt-8 border-t border-border">
-              <button
-                onClick={() => setLocation("/history")}
-                className="text-muted-foreground hover:text-foreground font-semibold uppercase tracking-wider transition-colors"
-              >
-                View Your Trip History →
-              </button>
-            </div>
           </div>
         )}
 
         {state === "planning" && (
-          <div className="space-y-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-8 text-center">
+              <h2 className="text-2xl font-bold mb-2">Planning Your Trip</h2>
+              <p className="text-muted-foreground">
+                Our AI agents are working together to create your perfect itinerary...
+              </p>
+            </div>
             <AgentNetworkStatus sessionId={sessionId} />
           </div>
         )}
 
         {state === "results" && tripData && (
-          <TripResults
-            destination={tripData.destination}
-            duration={tripData.duration}
-            budget={tripData.budget}
-            travelPlan={tripData.result.travelPlan}
-            budgetAllocation={tripData.result.logistics.budgetAllocation}
-            weatherOverview={tripData.result.logistics.weatherOverview}
-            tripId={tripData.tripId}
-            onSaveTrip={handleSaveTrip}
-            onNewTrip={handleNewTrip}
-          />
+          <div>
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-2">Your Trip Plan</h2>
+              <p className="text-muted-foreground">
+                {tripData.destination} • {tripData.duration} Days • RM {tripData.budget.toLocaleString()}
+              </p>
+            </div>
+            <TripResults
+              destination={tripData.destination}
+              duration={tripData.duration}
+              budget={tripData.budget}
+              travelPlan={tripData.result.travelPlan}
+              budgetAllocation={tripData.result.logistics.budgetAllocation}
+              weatherOverview={tripData.result.logistics.weatherOverview}
+              tripId={tripData.tripId}
+              onSaveTrip={handleSaveTrip}
+              onNewTrip={handleNewTrip}
+            />
+            <div className="mt-8 flex gap-4 justify-center">
+              <Button onClick={handleNewTrip} variant="outline">
+                Plan Another Trip
+              </Button>
+              <Button onClick={handleSaveTrip}>
+                Save to History
+              </Button>
+            </div>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

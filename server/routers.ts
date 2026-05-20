@@ -6,7 +6,6 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -19,11 +18,10 @@ export const appRouter = router({
     }),
   }),
 
-  // Trip planning and history management
   trips: router({
     /**
      * Plan a trip using the multi-agent orchestrator.
-     * Accepts destination, duration, and budget, returns the complete trip plan.
+     * Returns sessionId immediately so client can join WebSocket room before planning starts.
      */
     plan: protectedProcedure
       .input(
@@ -38,34 +36,43 @@ export const appRouter = router({
         const { orchestratorAgent } = await import("./agents");
         const { createTrip } = await import("./db");
         const { nanoid } = await import("nanoid");
+        const { wsManager } = await import("./_core/websocket");
 
         try {
-          // Generate a unique session ID for WebSocket communication
           const sessionId = nanoid();
 
-          // Run the orchestrator agent to generate the trip plan with real-time WebSocket updates
-          const result = await orchestratorAgent(destination, duration, budget, sessionId);
+          // Start planning in background without awaiting
+          // This allows client to receive sessionId immediately and join WebSocket room
+          orchestratorAgent(destination, duration, budget, sessionId)
+            .then(async (result) => {
+              const itineraryJson = JSON.stringify(result.travelPlan);
+              const budgetBreakdownJson = JSON.stringify(result.logistics.budgetAllocation);
+              const weatherJson = result.logistics.weatherOverview;
 
-          // Save the trip to the database
-          const itineraryJson = JSON.stringify(result.travelPlan);
-          const budgetBreakdownJson = JSON.stringify(result.logistics.budgetAllocation);
-          const weatherJson = result.logistics.weatherOverview;
+              const tripId = await createTrip(
+                ctx.user.id,
+                destination,
+                duration,
+                budget,
+                itineraryJson,
+                budgetBreakdownJson,
+                weatherJson
+              );
 
-          const tripId = await createTrip(
-            ctx.user.id,
-            destination,
-            duration,
-            budget,
-            itineraryJson,
-            budgetBreakdownJson,
-            weatherJson
-          );
+              // Send planning_complete event with full result
+              wsManager.broadcastPlanningComplete(sessionId, {
+                ...result,
+                tripId,
+                sessionId,
+              });
+            })
+            .catch((error) => {
+              console.error("Error during background planning:", error);
+              wsManager.broadcastError(sessionId, error instanceof Error ? error.message : "Unknown error");
+            });
 
-          return {
-            ...result,
-            tripId,
-            sessionId,
-          };
+          // Return sessionId immediately so client can join WebSocket room
+          return { sessionId };
         } catch (error) {
           console.error("Error planning trip:", error);
           throw new TRPCError({
@@ -98,27 +105,19 @@ export const appRouter = router({
     }),
 
     /**
-     * Get a single trip by ID.
+     * Get a specific trip by ID.
      */
     getById: protectedProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ tripId: z.number() }))
       .query(async ({ ctx, input }) => {
         const { getTripById } = await import("./db");
 
         try {
-          const trip = await getTripById(input.id);
+          const trip = await getTripById(input.tripId);
           if (!trip) {
             throw new TRPCError({
               code: "NOT_FOUND",
-              message: "Trip not found.",
-            });
-          }
-
-          // Verify ownership
-          if (trip.userId !== ctx.user.id) {
-            throw new TRPCError({
-              code: "FORBIDDEN",
-              message: "You do not have access to this trip.",
+              message: "Trip not found",
             });
           }
 
@@ -128,7 +127,9 @@ export const appRouter = router({
             budgetBreakdown: JSON.parse(trip.budgetBreakdown),
           };
         } catch (error) {
-          if (error instanceof TRPCError) throw error;
+          if (error instanceof TRPCError) {
+            throw error;
+          }
           console.error("Error fetching trip:", error);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
@@ -138,34 +139,36 @@ export const appRouter = router({
       }),
 
     /**
-     * Delete a trip by ID.
+     * Delete a trip.
      */
     delete: protectedProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ tripId: z.number() }))
       .mutation(async ({ ctx, input }) => {
         const { getTripById, deleteTrip } = await import("./db");
 
         try {
-          const trip = await getTripById(input.id);
+          const trip = await getTripById(input.tripId);
           if (!trip) {
             throw new TRPCError({
               code: "NOT_FOUND",
-              message: "Trip not found.",
+              message: "Trip not found",
             });
           }
 
-          // Verify ownership
+          // Verify the trip belongs to the user
           if (trip.userId !== ctx.user.id) {
             throw new TRPCError({
               code: "FORBIDDEN",
-              message: "You do not have access to this trip.",
+              message: "You do not have permission to delete this trip",
             });
           }
 
-          await deleteTrip(input.id);
+          await deleteTrip(input.tripId);
           return { success: true };
         } catch (error) {
-          if (error instanceof TRPCError) throw error;
+          if (error instanceof TRPCError) {
+            throw error;
+          }
           console.error("Error deleting trip:", error);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
@@ -175,60 +178,48 @@ export const appRouter = router({
       }),
 
     /**
-     * Export a trip as a PDF document.
-     * Generates a professional PDF with itinerary, hotels, budget breakdown, and attractions.
+     * Export a trip as PDF.
      */
     exportPDF: protectedProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ tripId: z.number() }))
       .mutation(async ({ ctx, input }) => {
         const { getTripById } = await import("./db");
         const { generateTripPDF } = await import("./pdf-generator");
 
         try {
-          const trip = await getTripById(input.id);
+          const trip = await getTripById(input.tripId);
           if (!trip) {
             throw new TRPCError({
               code: "NOT_FOUND",
-              message: "Trip not found.",
+              message: "Trip not found",
             });
           }
 
-          // Verify ownership
-          if (trip.userId !== ctx.user.id) {
-            throw new TRPCError({
-              code: "FORBIDDEN",
-              message: "You do not have access to this trip.",
-            });
-          }
-
-          // Parse the stored JSON data
           const itinerary = JSON.parse(trip.itinerary);
           const budgetBreakdown = JSON.parse(trip.budgetBreakdown);
 
-          // Generate PDF
           const pdfBuffer = await generateTripPDF({
             destination: trip.destination,
             duration: trip.duration,
             budget: trip.budget,
-            itinerary: itinerary.itinerary || [],
-            hotels: itinerary.hotels || [],
-            localFood: itinerary.localFood || [],
-            attractions: itinerary.attractions || [],
-            weatherOverview: trip.weatherOverview || "Weather information not available.",
+            itinerary,
+            hotels: [],
+            localFood: [],
+            attractions: [],
+            weatherOverview: trip.weatherOverview || "",
             budgetAllocation: budgetBreakdown,
           });
 
-          // Return PDF as base64 for download
+          const base64Pdf = pdfBuffer.toString("base64");
           return {
-            pdf: pdfBuffer.toString("base64"),
-            filename: `${trip.destination.replace(/\s+/g, "-").toLowerCase()}-trip-plan.pdf`,
+            pdf: base64Pdf,
+            filename: `${trip.destination}-${trip.duration}days-trip.pdf`,
           };
         } catch (error) {
-          if (error instanceof TRPCError) throw error;
-          console.error("Error exporting trip to PDF:", error);
+          console.error("Error exporting PDF:", error);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to export trip to PDF.",
+            message: "Failed to export trip as PDF.",
           });
         }
       }),

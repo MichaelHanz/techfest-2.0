@@ -97,7 +97,7 @@ describe("trips router", () => {
       const caller = appRouter.createCaller(ctx);
 
       // Test with non-existent trip
-      await expect(caller.trips.getById({ id: 99999 })).rejects.toThrow("Trip not found");
+      await expect(caller.trips.getById({ tripId: 99999 })).rejects.toThrow("Trip not found");
     });
 
     it("should require authentication", async () => {
@@ -109,7 +109,7 @@ describe("trips router", () => {
 
       const caller = appRouter.createCaller(ctx);
 
-      await expect(caller.trips.getById({ id: 1 })).rejects.toThrow();
+      await expect(caller.trips.getById({ tripId: 1 })).rejects.toThrow();
     });
   });
 
@@ -119,7 +119,7 @@ describe("trips router", () => {
       const caller = appRouter.createCaller(ctx);
 
       // Test with non-existent trip
-      await expect(caller.trips.delete({ id: 99999 })).rejects.toThrow("Trip not found");
+      await expect(caller.trips.delete({ tripId: 99999 })).rejects.toThrow("Trip not found");
     });
 
     it("should require authentication", async () => {
@@ -131,7 +131,7 @@ describe("trips router", () => {
 
       const caller = appRouter.createCaller(ctx);
 
-      await expect(caller.trips.delete({ id: 1 })).rejects.toThrow();
+      await expect(caller.trips.delete({ tripId: 1 })).rejects.toThrow();
     });
 
     it("should prevent users from deleting other users' trips", async () => {
@@ -142,7 +142,7 @@ describe("trips router", () => {
       const caller2 = appRouter.createCaller(ctx2);
 
       // Try to delete a trip that doesn't exist for user 2
-      await expect(caller2.trips.delete({ id: 1 })).rejects.toThrow();
+      await expect(caller2.trips.delete({ tripId: 1 })).rejects.toThrow();
     });
   });
 });

@@ -13,7 +13,7 @@ export default function TripDetailPage() {
 
   const tripId = params?.id ? parseInt(params.id) : null;
   const { data: trip, isLoading } = trpc.trips.getById.useQuery(
-    { id: tripId! },
+    { tripId: tripId! },
     { enabled: !!tripId }
   );
 

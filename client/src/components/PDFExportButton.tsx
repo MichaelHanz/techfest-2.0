@@ -21,7 +21,7 @@ export default function PDFExportButton({
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const result = await exportPDF.mutateAsync({ id: tripId });
+      const result = await exportPDF.mutateAsync({ tripId });
 
       // Decode base64 PDF and create blob
       const binaryString = atob(result.pdf);

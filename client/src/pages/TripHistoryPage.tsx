@@ -25,7 +25,7 @@ export default function TripHistoryPage() {
   const handleDelete = async (tripId: number) => {
     if (confirm("Are you sure you want to delete this trip?")) {
       try {
-        await deleteTrip.mutateAsync({ id: tripId });
+        await deleteTrip.mutateAsync({ tripId });
         toast.success("Trip deleted successfully");
         refetch();
       } catch (error) {

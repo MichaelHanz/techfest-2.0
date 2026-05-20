@@ -71,11 +71,17 @@ export function useAgentProgress(sessionId: string | null) {
     newSocket.on("planning_complete", (results: Record<string, unknown>) => {
       console.log("[WebSocket] Planning complete:", results);
       setCurrentAgent(null);
+      // Dispatch custom event for TripPlanningPage to listen to
+      const event = new CustomEvent(`planning-complete-${sessionId}`, { detail: results });
+      window.dispatchEvent(event);
     });
 
     newSocket.on("planning_error", (error: { error: string; timestamp: number }) => {
       console.error("[WebSocket] Planning error:", error);
       setCurrentAgent(null);
+      // Dispatch error event
+      const event = new CustomEvent(`planning-error-${sessionId}`, { detail: error });
+      window.dispatchEvent(event);
     });
 
     setSocket(newSocket);
