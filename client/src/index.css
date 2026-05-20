@@ -133,6 +133,41 @@
   }
 }
 
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.3);
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 100, 100, 0.5);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  }
+
+  .glow-accent-lg {
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.4);
+  }
+
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .transition-smooth-lg {
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
 @layer components {
   /**
    * Custom container utility that centers content and adds responsive padding.

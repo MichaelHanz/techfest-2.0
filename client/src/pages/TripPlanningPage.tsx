@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Compass, ChevronLeft } from "lucide-react";
+import { Compass, ChevronLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TripForm from "@/components/TripForm";
 import AgentNetworkStatus from "@/components/AgentNetworkStatus";
@@ -132,89 +133,192 @@ export default function TripPlanningPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Sticky Navbar */}
-      <header className={`sticky top-0 z-50 border-b border-border/80 bg-card/40 backdrop-blur-sm transition-shadow duration-300 ${
-        isScrolled ? "shadow-md" : ""
-      }`}>
-        <div className="container flex items-center justify-between py-6">
-          <button
+      <header
+        className={`sticky top-0 z-50 border-b border-border/80 transition-all duration-300 ${
+          isScrolled ? "bg-card/60 shadow-lg backdrop-blur-md" : "bg-card/40 backdrop-blur-sm"
+        }`}
+      >
+        <div className="container flex items-center justify-between py-4 px-6">
+          <motion.button
             onClick={() => setLocation("/")}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             aria-label="Home"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             <div className="h-10 w-10 rounded-2xl bg-accent/15 text-accent flex items-center justify-center">
               <Compass className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">Generative AI</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Generative AI</p>
               <p className="text-lg font-semibold">Smart Travel Planner</p>
             </div>
-          </button>
-          <Button
-            onClick={() => setLocation("/")}
-            variant="outline"
-            className="gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Home
-          </Button>
+          </motion.button>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              onClick={() => setLocation("/")}
+              variant="outline"
+              className="gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to Home
+            </Button>
+          </motion.div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container py-12">
-        {state === "form" && (
-          <div className="max-w-2xl mx-auto">
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold mb-2">Plan Your Trip</h1>
-              <p className="text-muted-foreground">
-                Let our AI agents create a personalized itinerary and budget plan for your journey.
-              </p>
-            </div>
-            <TripForm onSubmit={handlePlanTrip} isLoading={planTrip.isPending} />
-          </div>
-        )}
+      <main className="container py-12 px-6">
+        <AnimatePresence mode="wait">
+          {state === "form" && (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="max-w-2xl mx-auto"
+            >
+              <motion.div
+                className="mb-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Sparkles className="w-6 h-6 text-accent" />
+                  </motion.div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-accent to-accent/60 bg-clip-text text-transparent">
+                    Plan Your Trip
+                  </h1>
+                </div>
+                <p className="text-muted-foreground text-lg">
+                  Let our AI agents create a personalized itinerary and budget plan for your journey.
+                </p>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <TripForm onSubmit={handlePlanTrip} isLoading={planTrip.isPending} />
+              </motion.div>
+            </motion.div>
+          )}
 
-        {state === "planning" && (
-          <div className="max-w-2xl mx-auto">
-            <div className="mb-8 text-center">
-              <h2 className="text-2xl font-bold mb-2">Planning Your Trip</h2>
-              <p className="text-muted-foreground">
-                Our AI agents are working together to create your perfect itinerary...
-              </p>
-            </div>
-            <AgentNetworkStatus sessionId={sessionId} />
-          </div>
-        )}
+          {state === "planning" && (
+            <motion.div
+              key="planning"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="max-w-4xl mx-auto"
+            >
+              <motion.div
+                className="mb-12 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <Sparkles className="w-6 h-6 text-accent" />
+                  </motion.div>
+                  <h2 className="text-3xl font-bold">Planning Your Trip</h2>
+                </div>
+                <p className="text-muted-foreground text-lg">
+                  Our AI agents are working together to create your perfect itinerary...
+                </p>
+              </motion.div>
 
-        {state === "results" && tripData && (
-          <div>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-2">Your Trip Plan</h2>
-              <p className="text-muted-foreground">
-                {tripData.destination} • {tripData.duration} Days • RM {tripData.budget.toLocaleString()}
-              </p>
-            </div>
-            <TripResults
-              destination={tripData.destination}
-              duration={tripData.duration}
-              budget={tripData.budget}
-              travelPlan={tripData.result.travelPlan}
-              budgetAllocation={tripData.result.logistics.budgetAllocation}
-              weatherOverview={tripData.result.logistics.weatherOverview}
-              tripId={tripData.tripId}
-              onSaveTrip={handleSaveTrip}
-              onNewTrip={handleNewTrip}
-            />
-            <div className="mt-8 flex gap-4 justify-center">
-              <Button onClick={handleNewTrip} variant="outline">
-                Plan Another Trip
-              </Button>
-              <Button onClick={handleSaveTrip}>
-                Save to History
-              </Button>
-            </div>
-          </div>
-        )}
+              {/* Agent Network Status with enhanced spacing */}
+              <motion.div
+                className="bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 p-8 shadow-xl"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <AgentNetworkStatus sessionId={sessionId} />
+              </motion.div>
+            </motion.div>
+          )}
+
+          {state === "results" && tripData && (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <motion.div
+                className="mb-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Sparkles className="w-6 h-6 text-accent" />
+                  </motion.div>
+                  <h2 className="text-3xl font-bold">Your Trip Plan</h2>
+                </div>
+                <p className="text-muted-foreground text-lg">
+                  {tripData.destination} • {tripData.duration} Days • RM {tripData.budget.toLocaleString()}
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <TripResults
+                  destination={tripData.destination}
+                  duration={tripData.duration}
+                  budget={tripData.budget}
+                  travelPlan={tripData.result.travelPlan}
+                  budgetAllocation={tripData.result.logistics.budgetAllocation}
+                  weatherOverview={tripData.result.logistics.weatherOverview}
+                  tripId={tripData.tripId}
+                  onSaveTrip={handleSaveTrip}
+                  onNewTrip={handleNewTrip}
+                />
+              </motion.div>
+
+              {/* Action Buttons */}
+              <motion.div
+                className="mt-12 flex gap-4 justify-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button onClick={handleNewTrip} variant="outline" size="lg">
+                    Plan Another Trip
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button onClick={handleSaveTrip} size="lg" className="gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Save to History
+                  </Button>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
