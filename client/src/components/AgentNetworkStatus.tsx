@@ -507,7 +507,8 @@ export default function AgentNetworkStatus({ sessionId }: AgentNetworkStatusProp
                     case "agent_start":
                       return "▶";
                     case "agent_progress":
-                      return "◆";
+                      // Show retry indicator for retry messages
+                      return event.message.includes("Retrying") ? "↻" : "◆";
                     case "agent_complete":
                       return "✓";
                     case "agent_error":
@@ -517,6 +518,13 @@ export default function AgentNetworkStatus({ sessionId }: AgentNetworkStatusProp
                   }
                 };
 
+                const getEventTextColor = () => {
+                  if (event.message.includes("Retrying")) {
+                    return "text-yellow-400"; // Yellow for retry messages
+                  }
+                  return getAgentColor();
+                };
+
                 return (
                   <motion.div
                     key={`${event.timestamp}-${index}`}
@@ -524,7 +532,7 @@ export default function AgentNetworkStatus({ sessionId }: AgentNetworkStatusProp
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ duration: 0.3 }}
-                    className={`${getAgentColor()} flex gap-3 items-start`}
+                    className={`${getEventTextColor()} flex gap-3 items-start`}
                   >
                     <span className="text-slate-500 flex-shrink-0 mt-0.5">{getEventIcon()}</span>
                     <div className="flex-1 min-w-0">

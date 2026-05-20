@@ -1,5 +1,6 @@
 import { invokeLLM } from "./_core/llm";
 import { wsManager, type AgentProgressEvent } from "./_core/websocket";
+import { retryWithBackoff } from "./retry";
 
 /**
  * Type definitions for agent responses
@@ -161,61 +162,79 @@ Format your response as a valid JSON object with the following structure:
   broadcastEvent("Travel & Culture: Generating day-by-day activities and meal plans");
 
   try {
-    const response = await invokeLLM({
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "travel_plan",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            itinerary: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  day: { type: "number" },
-                  title: { type: "string" },
-                  activities: { type: "array", items: { type: "string" } },
-                  meals: { type: "array", items: { type: "string" } },
-                  notes: { type: "string" },
+    const retryResult = await retryWithBackoff(
+      () => invokeLLM({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "travel_plan",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                itinerary: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      day: { type: "number" },
+                      title: { type: "string" },
+                      activities: { type: "array", items: { type: "string" } },
+                      meals: { type: "array", items: { type: "string" } },
+                      notes: { type: "string" },
+                    },
+                    required: ["day", "title", "activities", "meals", "notes"],
+                    additionalProperties: false,
+                  },
                 },
-                required: ["day", "title", "activities", "meals", "notes"],
-                additionalProperties: false,
-              },
-            },
-            hotels: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  type: { type: "string" },
-                  pricePerNight: { type: "string" },
-                  highlights: { type: "array", items: { type: "string" } },
-                  location: { type: "string" },
+                hotels: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      type: { type: "string" },
+                      pricePerNight: { type: "string" },
+                      highlights: { type: "array", items: { type: "string" } },
+                      location: { type: "string" },
+                    },
+                    required: ["name", "type", "pricePerNight", "highlights", "location"],
+                    additionalProperties: false,
+                  },
                 },
-                required: ["name", "type", "pricePerNight", "highlights", "location"],
-                additionalProperties: false,
+                localFood: { type: "array", items: { type: "string" } },
+                attractions: { type: "array", items: { type: "string" } },
               },
+              required: ["itinerary", "hotels", "localFood", "attractions"],
+              additionalProperties: false,
             },
-            localFood: { type: "array", items: { type: "string" } },
-            attractions: { type: "array", items: { type: "string" } },
           },
-          required: ["itinerary", "hotels", "localFood", "attractions"],
-          additionalProperties: false,
         },
-      },
-    },
-  });
+      }),
+      {
+        maxAttempts: 3,
+        initialDelayMs: 1000,
+        maxDelayMs: 10000,
+        backoffMultiplier: 2,
+        onRetry: (attempt, error, delayMs) => {
+          console.log(`[Travel & Culture Agent] Retry attempt ${attempt} after ${delayMs}ms: ${error.message}`);
+          broadcastEvent(`Travel & Culture: Retrying after ${delayMs}ms (attempt ${attempt}/3)`, "agent_progress");
+        },
+      }
+    );
+
+    if (!retryResult.success) {
+      throw retryResult.error || new Error("Failed to get response from LLM after 3 attempts");
+    }
+
+    const response = retryResult.data;
 
     // Parse the JSON response from the LLM
-    const content = response.choices[0]?.message.content;
+    const content = response!.choices[0]?.message.content;
     if (!content || typeof content !== "string") {
       throw new Error("No response from Travel & Culture Agent");
     }
@@ -309,43 +328,61 @@ Format your response as a valid JSON object with the following structure:
   broadcastEvent("Logistics: Querying LLM for final budget breakdown");
 
   try {
-    const response = await invokeLLM({
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "logistics_plan",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            weatherOverview: { type: "string" },
-            budgetAllocation: {
+    const retryResult = await retryWithBackoff(
+      () => invokeLLM({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "logistics_plan",
+            strict: true,
+            schema: {
               type: "object",
               properties: {
-                accommodation: { type: "number" },
-                food: { type: "number" },
-                transport: { type: "number" },
-                activities: { type: "number" },
-                contingency: { type: "number" },
+                weatherOverview: { type: "string" },
+                budgetAllocation: {
+                  type: "object",
+                  properties: {
+                    accommodation: { type: "number" },
+                    food: { type: "number" },
+                    transport: { type: "number" },
+                    activities: { type: "number" },
+                    contingency: { type: "number" },
+                  },
+                  required: ["accommodation", "food", "transport", "activities", "contingency"],
+                  additionalProperties: false,
+                },
+                recommendations: { type: "array", items: { type: "string" } },
               },
-              required: ["accommodation", "food", "transport", "activities", "contingency"],
+              required: ["weatherOverview", "budgetAllocation", "recommendations"],
               additionalProperties: false,
             },
-            recommendations: { type: "array", items: { type: "string" } },
           },
-          required: ["weatherOverview", "budgetAllocation", "recommendations"],
-          additionalProperties: false,
         },
-      },
-    },
-  });
+      }),
+      {
+        maxAttempts: 3,
+        initialDelayMs: 1000,
+        maxDelayMs: 10000,
+        backoffMultiplier: 2,
+        onRetry: (attempt, error, delayMs) => {
+          console.log(`[Logistics Agent] Retry attempt ${attempt} after ${delayMs}ms: ${error.message}`);
+          broadcastEvent(`Logistics: Retrying after ${delayMs}ms (attempt ${attempt}/3)`, "agent_progress");
+        },
+      }
+    );
+
+    if (!retryResult.success) {
+      throw retryResult.error || new Error("Failed to get response from LLM after 3 attempts");
+    }
+
+    const response = retryResult.data;
 
     // Parse the JSON response from the LLM
-    const content = response.choices[0]?.message.content;
+    const content = response!.choices[0]?.message.content;
     if (!content || typeof content !== "string") {
       throw new Error("No response from Logistics Agent");
     }
