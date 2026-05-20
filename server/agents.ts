@@ -1,4 +1,5 @@
 import { invokeLLM } from "./_core/llm";
+import { wsManager, type AgentProgressEvent } from "./_core/websocket";
 
 /**
  * Type definitions for agent responses
@@ -50,27 +51,46 @@ export async function orchestratorAgent(
   destination: string,
   duration: number,
   budget: number,
+  sessionId?: string,
   onStatusUpdate?: (status: string) => void
 ): Promise<{
   travelPlan: TravelAgentResponse;
   logistics: LogisticsAgentResponse;
 }> {
-  onStatusUpdate?.("Orchestrator: Analyzing trip requirements");
-
-  // Step 1: Get travel and culture recommendations
-  onStatusUpdate?.("Orchestrator: Delegating to Travel & Culture Agent");
-  const travelPlan = await travelCultureAgent(destination, duration, budget);
-
-  // Step 2: Get logistics and budget breakdown
-  onStatusUpdate?.("Orchestrator: Delegating to Logistics Agent");
-  const logistics = await logisticsAgent(destination, duration, budget, travelPlan);
-
-  onStatusUpdate?.("Orchestrator: Trip plan complete");
-
-  return {
-    travelPlan,
-    logistics,
+  const broadcastEvent = (agent: string, message: string, type: AgentProgressEvent["type"] = "agent_progress") => {
+    onStatusUpdate?.(message);
+    if (sessionId) {
+      wsManager.broadcastAgentProgress(sessionId, {
+        type,
+        agent: agent as any,
+        message,
+        timestamp: Date.now(),
+      });
+    }
   };
+
+  broadcastEvent("Orchestrator", "Orchestrator: Analyzing trip requirements", "agent_start");
+
+  try {
+    // Step 1: Get travel and culture recommendations
+    broadcastEvent("Orchestrator", "Orchestrator: Delegating to Travel & Culture Agent");
+    const travelPlan = await travelCultureAgent(destination, duration, budget, sessionId);
+
+    // Step 2: Get logistics and budget breakdown
+    broadcastEvent("Orchestrator", "Orchestrator: Delegating to Logistics Agent");
+    const logistics = await logisticsAgent(destination, duration, budget, travelPlan, sessionId);
+
+    broadcastEvent("Orchestrator", "Orchestrator: Trip plan complete", "agent_complete");
+
+    return {
+      travelPlan,
+      logistics,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    broadcastEvent("Orchestrator", `Orchestrator: Error - ${errorMessage}`, "agent_error");
+    throw error;
+  }
 }
 
 /**
@@ -82,8 +102,22 @@ export async function orchestratorAgent(
 export async function travelCultureAgent(
   destination: string,
   duration: number,
-  budget: number
+  budget: number,
+  sessionId?: string
 ): Promise<TravelAgentResponse> {
+  const broadcastEvent = (message: string, type: AgentProgressEvent["type"] = "agent_progress") => {
+    if (sessionId) {
+      wsManager.broadcastAgentProgress(sessionId, {
+        type,
+        agent: "Travel & Culture",
+        message,
+        timestamp: Date.now(),
+      });
+    }
+  };
+
+  broadcastEvent("Travel & Culture: Starting itinerary generation", "agent_start");
+
   const systemPrompt = `You are an expert travel planner and cultural guide. Your role is to create detailed, 
 authentic travel itineraries that balance popular attractions with local experiences. You provide practical 
 recommendations for accommodations, dining, and activities that match the traveler's budget and interests.`;
@@ -121,6 +155,8 @@ Format your response as a valid JSON object with the following structure:
   "localFood": ["food 1", "food 2"],
   "attractions": ["attraction 1", "attraction 2"]
 }`;
+
+  broadcastEvent("Travel & Culture: Generating detailed itinerary and recommendations");
 
   const response = await invokeLLM({
     messages: [
@@ -182,6 +218,8 @@ Format your response as a valid JSON object with the following structure:
   }
 
   const parsed = JSON.parse(content);
+  broadcastEvent("Travel & Culture: Itinerary generation complete", "agent_complete");
+
   return {
     itinerary: parsed.itinerary,
     hotels: parsed.hotels,
@@ -200,8 +238,22 @@ export async function logisticsAgent(
   destination: string,
   duration: number,
   budget: number,
-  travelPlan: TravelAgentResponse
+  travelPlan: TravelAgentResponse,
+  sessionId?: string
 ): Promise<LogisticsAgentResponse> {
+  const broadcastEvent = (message: string, type: AgentProgressEvent["type"] = "agent_progress") => {
+    if (sessionId) {
+      wsManager.broadcastAgentProgress(sessionId, {
+        type,
+        agent: "Logistics",
+        message,
+        timestamp: Date.now(),
+      });
+    }
+  };
+
+  broadcastEvent("Logistics: Starting budget and weather analysis", "agent_start");
+
   const systemPrompt = `You are a logistics and budget planning expert. Your role is to provide practical 
 weather insights and create realistic budget allocations that align with the travel plan and destination costs.`;
 
@@ -237,6 +289,8 @@ Format your response as a valid JSON object with the following structure:
 }
 
 **All numbers in budgetAllocation MUST be in RM and should sum to approximately RM ${budget}.**`;
+
+  broadcastEvent("Logistics: Calculating budget allocation and weather forecast");
 
   const response = await invokeLLM({
     messages: [
@@ -280,6 +334,8 @@ Format your response as a valid JSON object with the following structure:
   }
 
   const parsed = JSON.parse(content);
+  broadcastEvent("Logistics: Budget and weather analysis complete", "agent_complete");
+
   return {
     weatherOverview: parsed.weatherOverview,
     budgetAllocation: parsed.budgetAllocation,

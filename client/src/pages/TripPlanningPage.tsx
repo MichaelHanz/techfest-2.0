@@ -48,6 +48,7 @@ export default function TripPlanningPage() {
   const [state, setState] = useState<PlanningState>("form");
   const [currentAgent, setCurrentAgent] = useState<string>();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [tripData, setTripData] = useState<{
     destination: string;
     duration: number;
@@ -93,7 +94,8 @@ export default function TripPlanningPage() {
 
       clearInterval(agentInterval);
 
-      const planResult = result as TripPlanResult;
+      const planResult = result as TripPlanResult & { sessionId: string };
+      setSessionId(planResult.sessionId);
       setTripData({
         destination,
         duration,
@@ -185,7 +187,7 @@ export default function TripPlanningPage() {
 
         {state === "planning" && (
           <div className="space-y-8">
-            <AgentNetworkStatus />
+            <AgentNetworkStatus sessionId={sessionId} />
           </div>
         )}
 

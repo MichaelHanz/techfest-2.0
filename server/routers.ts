@@ -37,10 +37,14 @@ export const appRouter = router({
         const { destination, duration, budget } = input;
         const { orchestratorAgent } = await import("./agents");
         const { createTrip } = await import("./db");
+        const { nanoid } = await import("nanoid");
 
         try {
-          // Run the orchestrator agent to generate the trip plan
-          const result = await orchestratorAgent(destination, duration, budget);
+          // Generate a unique session ID for WebSocket communication
+          const sessionId = nanoid();
+
+          // Run the orchestrator agent to generate the trip plan with real-time WebSocket updates
+          const result = await orchestratorAgent(destination, duration, budget, sessionId);
 
           // Save the trip to the database
           const itineraryJson = JSON.stringify(result.travelPlan);
@@ -60,6 +64,7 @@ export const appRouter = router({
           return {
             ...result,
             tripId,
+            sessionId,
           };
         } catch (error) {
           console.error("Error planning trip:", error);

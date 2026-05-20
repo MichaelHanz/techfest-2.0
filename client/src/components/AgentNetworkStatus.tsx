@@ -1,6 +1,9 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Zap, MapPin, TrendingUp } from "lucide-react";
+import { Zap, MapPin, TrendingUp, Wifi, WifiOff } from "lucide-react";
+import { useAgentProgress, type AgentProgressEvent } from "@/hooks/useAgentProgress";
 
 /**
  * TypewriterText component that reveals text character-by-character
@@ -30,31 +33,12 @@ const TypewriterText = ({ text, delay }: { text: string; delay: number }) => {
   return <span>{displayedText}</span>;
 };
 
-interface LogEntry {
-  id: string;
-  agent: "Orchestrator" | "Travel & Culture Agent" | "Logistics Agent";
-  message: string;
-  timestamp: number;
-}
-
-const mockLogSequence = [
-  { agent: "Orchestrator" as const, message: "[Orchestrator] Request received. Parsing parameters..." },
-  { agent: "Orchestrator" as const, message: "[Orchestrator] Initializing shared Context Artifact." },
-  { agent: "Orchestrator" as const, message: "[Orchestrator] Delegating itinerary research to Travel Agent..." },
-  { agent: "Travel & Culture Agent" as const, message: "[Travel & Culture] Executing tool: google_search(query=\"destination attractions\")" },
-  { agent: "Travel & Culture Agent" as const, message: "[Travel & Culture] Curating chronological timeline..." },
-  { agent: "Orchestrator" as const, message: "[Orchestrator] Delegating financial constraints to Logistics Agent..." },
-  { agent: "Logistics Agent" as const, message: "[Logistics] Executing tool: calculate_budget_allocation(budget=specified)" },
-  { agent: "Logistics Agent" as const, message: "[Logistics] Fetching real-time weather data..." },
-  { agent: "Orchestrator" as const, message: "[Orchestrator] Compiling final multi-agent consensus..." },
-];
-
 interface AgentNodeProps {
   name: string;
   icon: React.ReactNode;
   isActive: boolean;
   position: "center" | "left" | "right";
-  agentType: "Orchestrator" | "Travel & Culture Agent" | "Logistics Agent";
+  agentType: "Orchestrator" | "Travel & Culture" | "Logistics";
 }
 
 const AgentNode = ({ name, icon, isActive, position, agentType }: AgentNodeProps) => {
@@ -69,9 +53,9 @@ const AgentNode = ({ name, icon, isActive, position, agentType }: AgentNodeProps
     switch (agentType) {
       case "Orchestrator":
         return { glow: "rgba(168, 85, 247, 0.6)", border: "rgba(168, 85, 247, 1)", text: "text-purple-400" };
-      case "Travel & Culture Agent":
+      case "Travel & Culture":
         return { glow: "rgba(34, 197, 94, 0.6)", border: "rgba(34, 197, 94, 1)", text: "text-green-400" };
-      case "Logistics Agent":
+      case "Logistics":
         return { glow: "rgba(59, 130, 246, 0.6)", border: "rgba(59, 130, 246, 1)", text: "text-blue-400" };
     }
   };
@@ -98,253 +82,154 @@ const AgentNode = ({ name, icon, isActive, position, agentType }: AgentNodeProps
             : ["0 0 5px rgba(100, 100, 100, 0.2)", "0 0 10px rgba(100, 100, 100, 0.4)", "0 0 5px rgba(100, 100, 100, 0.2)"],
         }}
         transition={{
-          duration: isActive ? 1 : 2.5,
+          duration: isActive ? 1.5 : 2,
           repeat: Infinity,
-          ease: "easeInOut",
+          repeatType: "loop",
         }}
       >
-        {/* Node border */}
-        <motion.div
-          className="absolute inset-0 rounded-full border-2"
-          animate={{
-            borderColor: isActive ? colors.border : "rgba(100, 100, 100, 0.5)",
-            scale: isActive ? 1.1 : 1,
-          }}
-          transition={{
-            duration: isActive ? 0.8 : 2,
-            repeat: Infinity,
-            repeatType: "mirror",
-          }}
-        />
-
-        {/* Spinning border for active state */}
+        {/* Spinning border ring when active */}
         {isActive && (
           <motion.div
-            className="absolute inset-0 rounded-full border-2 border-transparent"
-            style={{
-              borderTopColor: colors.border,
-              borderRightColor: colors.border,
-            }}
+            className="absolute inset-0 rounded-full border-2"
+            style={{ borderColor: colors.border }}
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           />
         )}
 
-        {/* Inner circle background */}
-        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-          <div className={colors.text}>{icon}</div>
-        </div>
+        {/* Center circle */}
+        <motion.div
+          className="relative w-16 h-16 rounded-full flex items-center justify-center"
+          style={{
+            background: `radial-gradient(circle, ${colors.border}20, ${colors.border}05)`,
+            border: `2px solid ${colors.border}`,
+          }}
+          animate={{
+            scale: isActive ? [1, 1.1, 1] : 1,
+          }}
+          transition={{
+            duration: isActive ? 1.5 : 2,
+            repeat: Infinity,
+            repeatType: "loop",
+          }}
+        >
+          <div className={`${colors.text}`}>{icon}</div>
+        </motion.div>
       </motion.div>
 
-      {/* Agent name label */}
+      {/* Agent name */}
       <motion.p
-        className="mt-4 text-xs font-mono text-gray-400 text-center whitespace-nowrap"
+        className={`mt-4 text-sm font-semibold text-center ${colors.text}`}
         animate={{ opacity: isActive ? 1 : 0.6 }}
-        transition={{ duration: 0.5 }}
       >
         {name}
       </motion.p>
 
-      {/* Active status indicator */}
+      {/* Active indicator badge */}
       {isActive && (
         <motion.div
-          className="mt-2 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs font-mono"
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
+          className="mt-2 px-2 py-1 rounded-full text-xs font-mono"
+          style={{ background: colors.border, color: "#000" }}
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
         >
-          <span className={colors.text}>● ACTIVE</span>
+          ACTIVE
         </motion.div>
       )}
     </motion.div>
   );
 };
 
-interface DataPacketProps {
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
+/**
+ * DataPacket component - animated glowing dots that travel along SVG paths
+ */
+const DataPacket = ({
+  pathId,
+  duration,
+  delay,
+}: {
+  pathId: string;
+  duration: number;
   delay: number;
-  color: string;
-}
-
-const DataPacket = ({ fromX, fromY, toX, toY, delay, color }: DataPacketProps) => {
+}) => {
   return (
     <motion.circle
-      cx={fromX}
-      cy={fromY}
-      r="3"
-      fill={color}
+      cx="0"
+      cy="0"
+      r="4"
+      fill="rgba(168, 85, 247, 0.8)"
+      filter="url(#glow)"
       animate={{
-        cx: [fromX, toX],
-        cy: [fromY, toY],
-        opacity: [0.8, 0.3, 0.8],
+        offsetDistance: ["0%", "100%"],
       }}
       transition={{
-        duration: 2,
+        duration,
+        delay,
         repeat: Infinity,
-        delay: delay,
-        ease: "easeInOut",
+        ease: "linear",
       }}
-      filter="url(#glow)"
+      style={{
+        offsetPath: `url(#${pathId})`,
+      } as any}
     />
-  );
-};
-
-interface ConnectionLineProps {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  isActive: boolean;
-  color: string;
-}
-
-const ConnectionLine = ({ x1, y1, x2, y2, isActive, color }: ConnectionLineProps) => {
-  const activeColor = isActive ? color : "rgba(100, 100, 100, 0.3)";
-
-  return (
-    <motion.line
-      x1={x1}
-      y1={y1}
-      x2={x2}
-      y2={y2}
-      stroke={activeColor}
-      strokeWidth="2"
-      animate={{
-        stroke: isActive ? color : "rgba(100, 100, 100, 0.3)",
-        opacity: isActive ? 1 : 0.5,
-      }}
-      transition={{ duration: 0.5 }}
-    />
-  );
-};
-
-interface TerminalLogProps {
-  logs: LogEntry[];
-  currentAgent: "Orchestrator" | "Travel & Culture Agent" | "Logistics Agent" | null;
-}
-
-const TerminalLog = ({ logs, currentAgent }: TerminalLogProps) => {
-  const getAgentColor = (agent: string) => {
-    switch (agent) {
-      case "Orchestrator":
-        return "text-purple-400";
-      case "Travel & Culture Agent":
-        return "text-green-400";
-      case "Logistics Agent":
-        return "text-blue-400";
-      default:
-        return "text-cyan-400";
-    }
-  };
-
-  return (
-    <div className="mt-8 bg-black border border-gray-700 rounded-lg p-4 h-48 overflow-y-auto font-mono text-xs">
-      <div className="space-y-1">
-        {logs.map((log, index) => (
-          <motion.div
-            key={log.id}
-            className="text-gray-400"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <span className={getAgentColor(log.agent)}>{log.agent}</span>
-            <span className="text-gray-500"> $ </span>
-            <span className="text-gray-300">
-              <TypewriterText text={log.message} delay={index * 100} />
-            </span>
-          </motion.div>
-        ))}
-      </div>
-    </div>
   );
 };
 
 interface AgentNetworkStatusProps {
-  currentAgent?: "Orchestrator" | "Travel & Culture Agent" | "Logistics Agent" | null;
+  sessionId?: string | null;
 }
 
-export default function AgentNetworkStatus({ currentAgent: externalCurrentAgent }: AgentNetworkStatusProps) {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [activeAgent, setActiveAgent] = useState<"Orchestrator" | "Travel & Culture Agent" | "Logistics Agent" | null>(null);
+/**
+ * AgentNetworkStatus Component
+ *
+ * Displays a real-time visualization of the multi-agent system processing a trip request.
+ * Features:
+ * - Node graph with three agent nodes (Orchestrator, Travel & Culture, Logistics)
+ * - Animated data flow packets traveling between nodes
+ * - Live terminal log with typewriter effect
+ * - Real-time WebSocket updates from backend
+ */
+export default function AgentNetworkStatus({ sessionId }: AgentNetworkStatusProps) {
+  const { events, currentAgent, isConnected } = useAgentProgress(sessionId || null);
+  const [displayedEvents, setDisplayedEvents] = useState<AgentProgressEvent[]>([]);
 
-  // Use external current agent if provided, otherwise use internal state
-  const currentAgent = externalCurrentAgent !== undefined ? externalCurrentAgent : activeAgent;
-
+  // Update displayed events with animation delay
   useEffect(() => {
-    let logIndex = 0;
-    const maxLogsToShow = 8;
+    if (events.length > displayedEvents.length) {
+      const newEvent = events[events.length - 1];
+      const delay = displayedEvents.length * 200; // Stagger events
+      setTimeout(() => {
+        setDisplayedEvents([...displayedEvents, newEvent]);
+      }, delay);
+    }
+  }, [events, displayedEvents]);
 
-    const logInterval = setInterval(() => {
-      if (logIndex < mockLogSequence.length) {
-        const logEntry = mockLogSequence[logIndex];
-        setActiveAgent(logEntry.agent);
-
-        setLogs((prev) => {
-          const newLogs = [
-            ...prev,
-            {
-              id: `${logIndex}-${Date.now()}`,
-              agent: logEntry.agent,
-              message: logEntry.message,
-              timestamp: Date.now(),
-            },
-          ];
-          // Keep only the last maxLogsToShow entries
-          return newLogs.slice(-maxLogsToShow);
-        });
-
-        logIndex++;
-      } else {
-        // Loop back to the beginning
-        logIndex = 0;
-        setLogs([]);
-      }
-    }, 1200);
-
-    return () => clearInterval(logInterval);
-  }, []);
-
+  // Determine which agent is currently active
   const isOrchestratorActive = currentAgent === "Orchestrator";
-  const isTravelAgentActive = currentAgent === "Travel & Culture Agent";
-  const isLogisticsAgentActive = currentAgent === "Logistics Agent";
-
-  // SVG coordinates for the network graph
-  const svgWidth = 400;
-  const svgHeight = 300;
-  const orchestratorX = svgWidth / 2;
-  const orchestratorY = 40;
-  const travelAgentX = 80;
-  const travelAgentY = 260;
-  const logisticsAgentX = svgWidth - 80;
-  const logisticsAgentY = 260;
-
-  // Agent-specific colors
-  const orchestratorColor = "rgba(168, 85, 247, 0.6)";
-  const travelColor = "rgba(34, 197, 94, 0.6)";
-  const logisticsColor = "rgba(59, 130, 246, 0.6)";
+  const isTravelActive = currentAgent === "Travel & Culture";
+  const isLogisticsActive = currentAgent === "Logistics";
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      {/* Header with current agent status */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-white mb-2">AGENT NETWORK PROCESSING</h2>
-        <motion.p
-          className="text-sm text-gray-400"
-          animate={{ opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          {currentAgent ? `Currently: ${currentAgent}` : "Initializing multi-agent system..."}
-        </motion.p>
+    <div className="w-full max-w-2xl mx-auto space-y-8">
+      {/* Connection Status */}
+      <div className="flex items-center justify-center gap-2 text-sm">
+        {isConnected ? (
+          <>
+            <Wifi className="w-4 h-4 text-green-400" />
+            <span className="text-green-400">Connected to Agent Network</span>
+          </>
+        ) : (
+          <>
+            <WifiOff className="w-4 h-4 text-yellow-400" />
+            <span className="text-yellow-400">Connecting to Agent Network...</span>
+          </>
+        )}
       </div>
 
-      {/* Node Graph with SVG */}
-      <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-lg p-8 mb-6">
-        <svg width={svgWidth} height={svgHeight} className="w-full" viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
-          {/* Glow filter definition */}
+      {/* Node Graph Section */}
+      <div className="relative w-full h-64 bg-gradient-to-b from-slate-900/50 to-slate-950/50 rounded-lg border border-slate-700/50 overflow-hidden">
+        {/* SVG for connections and data packets */}
+        <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
           <defs>
             <filter id="glow">
               <feGaussianBlur stdDeviation="2" result="coloredBlur" />
@@ -355,104 +240,110 @@ export default function AgentNetworkStatus({ currentAgent: externalCurrentAgent 
             </filter>
           </defs>
 
-          {/* Connection lines with agent-specific colors */}
-          <ConnectionLine
-            x1={orchestratorX}
-            y1={orchestratorY + 40}
-            x2={travelAgentX}
-            y2={travelAgentY - 40}
-            isActive={isOrchestratorActive || isTravelAgentActive}
-            color={travelColor}
+          {/* Connection lines */}
+          <line
+            x1="50%"
+            y1="20%"
+            x2="20%"
+            y2="80%"
+            stroke="rgba(168, 85, 247, 0.3)"
+            strokeWidth="2"
+            strokeDasharray="5,5"
           />
-          <ConnectionLine
-            x1={orchestratorX}
-            y1={orchestratorY + 40}
-            x2={logisticsAgentX}
-            y2={logisticsAgentY - 40}
-            isActive={isOrchestratorActive || isLogisticsAgentActive}
-            color={logisticsColor}
+          <line
+            x1="50%"
+            y1="20%"
+            x2="80%"
+            y2="80%"
+            stroke="rgba(168, 85, 247, 0.3)"
+            strokeWidth="2"
+            strokeDasharray="5,5"
           />
 
-          {/* Data packets traveling along connections */}
-          {(isOrchestratorActive || isTravelAgentActive) && (
+          {/* Data packets traveling along paths */}
+          <path id="path-left" d="M 50% 20% L 20% 80%" fill="none" />
+          <path id="path-right" d="M 50% 20% L 80% 80%" fill="none" />
+
+          {isOrchestratorActive && (
             <>
-              <DataPacket
-                fromX={orchestratorX}
-                fromY={orchestratorY + 40}
-                toX={travelAgentX}
-                toY={travelAgentY - 40}
-                delay={0}
-                color={travelColor}
-              />
-              <DataPacket
-                fromX={orchestratorX}
-                fromY={orchestratorY + 40}
-                toX={travelAgentX}
-                toY={travelAgentY - 40}
-                delay={0.5}
-                color={travelColor}
-              />
-            </>
-          )}
-          {(isOrchestratorActive || isLogisticsAgentActive) && (
-            <>
-              <DataPacket
-                fromX={orchestratorX}
-                fromY={orchestratorY + 40}
-                toX={logisticsAgentX}
-                toY={logisticsAgentY - 40}
-                delay={0.3}
-                color={logisticsColor}
-              />
-              <DataPacket
-                fromX={orchestratorX}
-                fromY={orchestratorY + 40}
-                toX={logisticsAgentX}
-                toY={logisticsAgentY - 40}
-                delay={0.8}
-                color={logisticsColor}
-              />
+              <DataPacket pathId="path-left" duration={2} delay={0} />
+              <DataPacket pathId="path-right" duration={2} delay={0.5} />
             </>
           )}
         </svg>
 
-        {/* Agent nodes positioned absolutely over SVG */}
-        <div className="absolute inset-0 p-8">
-          <AgentNode
-            name="Orchestrator"
-            icon={<Zap size={24} />}
-            isActive={isOrchestratorActive}
-            position="center"
-            agentType="Orchestrator"
-          />
-          <AgentNode
-            name="Travel & Culture"
-            icon={<MapPin size={24} />}
-            isActive={isTravelAgentActive}
-            position="left"
-            agentType="Travel & Culture Agent"
-          />
-          <AgentNode
-            name="Logistics"
-            icon={<TrendingUp size={24} />}
-            isActive={isLogisticsAgentActive}
-            position="right"
-            agentType="Logistics Agent"
-          />
+        {/* Agent Nodes */}
+        <AgentNode
+          name="Orchestrator"
+          icon={<Zap className="w-8 h-8" />}
+          isActive={isOrchestratorActive}
+          position="center"
+          agentType="Orchestrator"
+        />
+        <AgentNode
+          name="Travel & Culture"
+          icon={<MapPin className="w-8 h-8" />}
+          isActive={isTravelActive}
+          position="left"
+          agentType="Travel & Culture"
+        />
+        <AgentNode
+          name="Logistics"
+          icon={<TrendingUp className="w-8 h-8" />}
+          isActive={isLogisticsActive}
+          position="right"
+          agentType="Logistics"
+        />
+      </div>
+
+      {/* Terminal Log Section */}
+      <div className="w-full bg-slate-950 rounded-lg border border-slate-700 overflow-hidden">
+        <div className="bg-slate-900 px-4 py-2 border-b border-slate-700">
+          <p className="text-xs font-mono text-slate-400">AGENT NETWORK LOG</p>
+        </div>
+
+        <div className="h-48 overflow-y-auto p-4 space-y-2 font-mono text-sm">
+          {displayedEvents.length === 0 ? (
+            <p className="text-slate-500">Initializing agent network...</p>
+          ) : (
+            displayedEvents.map((event, index) => {
+              const getAgentColor = () => {
+                switch (event.agent) {
+                  case "Orchestrator":
+                    return "text-purple-400";
+                  case "Travel & Culture":
+                    return "text-green-400";
+                  case "Logistics":
+                    return "text-blue-400";
+                  default:
+                    return "text-slate-400";
+                }
+              };
+
+              return (
+                <motion.div
+                  key={event.timestamp}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className={`${getAgentColor()}`}
+                >
+                  <span className="text-slate-500">[{new Date(event.timestamp).toLocaleTimeString()}]</span>{" "}
+                  <TypewriterText text={event.message} delay={0} />
+                </motion.div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* Terminal Log */}
-      <TerminalLog logs={logs} currentAgent={currentAgent} />
-
-      {/* Status indicator */}
-      <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-400">
-        <motion.div
-          className="w-2 h-2 rounded-full bg-green-400"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
-        <span>System Active</span>
+      {/* Status Summary */}
+      <div className="text-center text-sm text-slate-400">
+        <p>
+          {displayedEvents.length === 0
+            ? "Waiting for agent network response..."
+            : `Processing: ${displayedEvents.length} events received`}
+        </p>
       </div>
     </div>
   );
