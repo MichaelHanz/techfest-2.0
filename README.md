@@ -1,153 +1,121 @@
-# Smart Travel Planner
+# ✈️ Smart Travel Planner
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/yourusername/smart-travel-planner)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.12-3776ab?logo=python&logoColor=white)](https://www.python.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-22.13.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-
-## 🎯 Overview
-
-Smart Travel Planner is an **AI-powered travel planning platform** that eliminates travel planning fatigue by leveraging a sophisticated **Multi-Agent System** to autonomously generate hyper-personalized itineraries, recommend accommodations, and calculate intelligent budget allocations—all localized in **Malaysian Ringgit (RM)** for the Penang market.
+**An AI-powered, multi-agent orchestration engine for hyper-personalized, stress-free travel planning.**
 
 ---
 
-## 🏗️ Tech Stack Showcase
-
-### **Backend Architecture**
-```
-┌─────────────────────────────────────────────────────────┐
-│  Python 3.12 + FastAPI + Google ADK (Agent Dev Kit)    │
-│  ▸ Real-time WebSocket agent progress tracking         │
-│  ▸ Multi-agent orchestration & delegation              │
-│  ▸ Server-Sent Events for streaming responses          │
-└─────────────────────────────────────────────────────────┘
-```
-
-| Technology | Purpose | Color |
-|-----------|---------|-------|
-| **Python 3.12** | Core backend runtime | ![#3776ab](https://via.placeholder.com/15/3776ab/3776ab) Blue |
-| **FastAPI** | High-performance REST API framework | ![#009688](https://via.placeholder.com/15/009688/009688) Teal |
-| **Google ADK** | Multi-agent orchestration & LLM integration | ![#4285f4](https://via.placeholder.com/15/4285f4/4285f4) Google Blue |
-| **Uvicorn** | ASGI server for async operations | ![#2d3436](https://via.placeholder.com/15/2d3436/2d3436) Dark |
-
-### **Frontend Stack**
-```
-┌─────────────────────────────────────────────────────────┐
-│  React 19 + Vite + Tailwind CSS 4 + Framer Motion      │
-│  ▸ Real-time agent status visualization                │
-│  ▸ Interactive budget allocation with live charts      │
-│  ▸ Smooth scroll navigation & micro-interactions       │
-└─────────────────────────────────────────────────────────┘
-```
-
-| Technology | Purpose | Color |
-|-----------|---------|-------|
-| **React 19** | Component-based UI framework | ![#61dafb](https://via.placeholder.com/15/61dafb/61dafb) Cyan |
-| **Vite** | Lightning-fast build tool & dev server | ![#646cff](https://via.placeholder.com/15/646cff/646cff) Purple |
-| **Tailwind CSS 4** | Utility-first styling framework | ![#06b6d4](https://via.placeholder.com/15/06b6d4/06b6d4) Sky |
-| **Framer Motion** | Advanced animation library | ![#0055ff](https://via.placeholder.com/15/0055ff/0055ff) Motion Blue |
-| **Recharts** | Composable charting library | ![#8884d8](https://via.placeholder.com/15/8884d8/8884d8) Chart Blue |
-
-### **Database & Infrastructure**
-```
-┌─────────────────────────────────────────────────────────┐
-│  MySQL/TiDB + Drizzle ORM + tRPC                       │
-│  ▸ Type-safe database queries & migrations             │
-│  ▸ End-to-end type safety across stack                 │
-│  ▸ Real-time WebSocket connections                     │
-└─────────────────────────────────────────────────────────┘
-```
-
-| Technology | Purpose | Color |
-|-----------|---------|-------|
-| **MySQL/TiDB** | Relational database | ![#00758f](https://via.placeholder.com/15/00758f/00758f) MySQL Blue |
-| **Drizzle ORM** | Type-safe SQL query builder | ![#c5b358](https://via.placeholder.com/15/c5b358/c5b358) Gold |
-| **tRPC** | End-to-end type-safe APIs | ![#398ccb](https://via.placeholder.com/15/398ccb/398ccb) tRPC Blue |
-| **WebSocket** | Real-time bidirectional communication | ![#2d3436](https://via.placeholder.com/15/2d3436/2d3436) Dark |
+[![React](https://img.shields.io/badge/React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Google ADK](https://img.shields.io/badge/Google%20ADK-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
+[![Python](https://img.shields.io/badge/Python%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS%204-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
 ---
 
-## 🤖 Multi-Agent Architecture
+## 📉 The Problem: Planning Fatigue
 
-The application uses a sophisticated **3-node Multi-Agent System** coordinated through Google ADK:
+Travel planning today is broken. You're juggling 20+ browser tabs, cross-referencing hotel reviews, manually building spreadsheets for budgets, and second-guessing every decision. The process is exhausting, time-consuming, and leaves you stressed before your trip even begins.
 
-```mermaid
-graph TD
-    User["👤 User Input<br/>(Destination, Days, Budget)"]
-    
-    User -->|Request| Orchestrator["⚡ Orchestrator Agent<br/>(Coordinator)"]
-    
-    Orchestrator -->|Delegate| Travel["🗺️ Travel & Culture Agent<br/>(Itinerary Expert)"]
-    Orchestrator -->|Delegate| Logistics["📊 Logistics Agent<br/>(Budget & Weather)"]
-    
-    Travel -->|Research| GoogleSearch["🔍 google_search Tool"]
-    Travel -->|Return| TravelResult["Hotel Recommendations<br/>Day-by-Day Itinerary<br/>Local Attractions"]
-    
-    Logistics -->|Calculate| BudgetCalc["💰 Budget Allocation<br/>in RM"]
-    Logistics -->|Fetch| Weather["🌤️ Weather Data"]
-    Logistics -->|Return| LogisticsResult["Budget Breakdown<br/>Weather Overview"]
-    
-    TravelResult -->|Compile| Orchestrator
-    LogisticsResult -->|Compile| Orchestrator
-    
-    Orchestrator -->|Final Plan| Results["✅ Complete Trip Plan<br/>with Itinerary & Budget"]
-    
-    Results -->|Display| Frontend["🎨 React Frontend<br/>with Real-time Metrics"]
-```
-
-**Agent Roles:**
-- **Orchestrator Agent**: Routes user requests, maintains session context, delegates to sub-agents, compiles final results
-- **Travel & Culture Agent**: Generates itineraries, recommends hotels, suggests local food & attractions using `google_search` tool
-- **Logistics Agent**: Calculates budget allocations in RM, fetches real-time weather data, provides financial constraints
+**Smart Travel Planner transforms you from an overwhelmed researcher into an empowered traveler.** Instead of drowning in information, a coordinated swarm of AI agents works in parallel—one orchestrating the workflow, another curating local experiences, and a third handling financials with surgical precision. In minutes, you get a hyper-personalized itinerary, hotel recommendations, local food suggestions, and an exact budget breakdown—all localized in Malaysian Ringgit (RM).
 
 ---
 
 ## ✨ Key Features
 
-### 🎯 **Dynamic Itinerary Generation**
-- AI-powered day-by-day trip planning with activities, dining, and attractions
-- Collapsible timeline view with smooth scroll navigation
-- Real-time agent progress visualization during planning
+1. 🤖 **Multi-Agent Orchestration (Google ADK)**  
+   The Orchestrator Agent routes tasks intelligently instead of relying on a single, hallucination-prone LLM. Each agent specializes in its domain, ensuring accuracy and reducing computational waste.
 
-### 💰 **Intelligent Budget Management**
-- Automatic budget allocation across accommodation, food, transport, and activities
-- Interactive sliders for manual budget adjustment with live pie chart updates
-- All calculations in Malaysian Ringgit (RM) for local market
-- Bidirectional hover effects between chart and breakdown table
+2. 🌍 **Hyper-Local Curation**  
+   The Travel & Culture Agent discovers hidden gems, builds chronological itineraries, and recommends authentic local experiences—not generic tourist traps. Every suggestion is grounded in real-time research.
 
-### 📊 **Agent Performance Metrics Dashboard**
-- Real-time tracking of execution time per agent
-- Token usage and API call counts
-- WebSocket-powered live metrics updates
-- Color-coded agent status indicators
+3. 💰 **Intelligent Financials**  
+   The Logistics Agent calculates exact budget splits across accommodation, food, transport, and activities—all in Malaysian Ringgit. No guesswork. No currency confusion.
 
-### 🔄 **Real-Time Agent Communication**
-- Live terminal log showing agent-to-agent communication
-- Character-by-character typewriter effect for authenticity
-- WebSocket integration for genuine real-time progress
-- Agent-specific color coding (Purple: Orchestrator, Green: Travel, Blue: Logistics)
+4. ✨ **Fluid Agentic UI**  
+   Watch agents "think" in real-time with a responsive, high-contrast React interface powered by `framer-motion`. The AgentNetworkStatus component visualizes the multi-agent system at work, making the AI transparent and engaging.
 
-### 📱 **Trip History & Export**
-- Save and manage multiple trip plans
-- PDF export with dark theme styling and formatted budget tables
-- Trip detail view with full itinerary and budget breakdown
-- One-click export from history or fresh results
+5 📊 **Interactive Budget Visualization**  
+   Recharts-powered pie charts with real-time hover interactions. Adjust allocations with sliders and see the breakdown update instantly.
 
-### 🎨 **Professional UI/UX**
-- Dark industrial brutalist aesthetic with monochromatic grayscale palette
-- Smooth animations and micro-interactions throughout
-- Responsive design for mobile and desktop
-- High-contrast typography for readability
+6. 📄 **PDF Export**  
+   Download your complete trip plan as a beautifully formatted PDF—perfect for sharing with travel companions or keeping as a reference.
+
+7. 💾 **Trip History & Persistence**  
+   Save all your generated trips to a secure database. Revisit, compare, and refine past plans anytime.
+
+---
+
+## 🏗️ Architectural Overview
+
+Smart Travel Planner is built on a **decoupled, serverless-ready architecture** designed for scalability and maintainability:
+
+### Frontend Engine
+- **React 19** with **Vite** for lightning-fast development and production builds
+- **Tailwind CSS 4** for utility-first, responsive design with a dark industrial aesthetic
+- **Framer Motion** for smooth, physics-based animations and micro-interactions
+
+### State & Animation
+- **tRPC** for end-to-end type-safe API communication
+- **TanStack Query** for intelligent server state management and caching
+- **Framer Motion** for real-time agent status visualization and loading states
+
+### Backend & API
+- **Python 3.12** with **FastAPI** for high-performance, async request handling
+- **Drizzle ORM** with **MySQL/TiDB** for type-safe database operations
+- **Uvicorn** server with automatic OpenAPI documentation
+
+### AI Integration
+- **Google ADK (Agent Development Kit)** for multi-agent orchestration
+- **google_search** tool integration for real-time destination research
+- **invokeLLM** helper for structured LLM calls with JSON schema validation
+- **Manus OAuth** for seamless user authentication and session management
+
+### Data Flow
+```
+User Input (Destination, Duration, Budget)
+    ↓
+FastAPI /api/plan-trip Endpoint
+    ↓
+Orchestrator Agent (Google ADK)
+    ├→ Travel & Culture Agent (Itinerary, Hotels, Local Experiences)
+    └→ Logistics Agent (Weather, Budget Allocation)
+    ↓
+Structured JSON Response
+    ↓
+React Frontend (Real-time Visualization)
+    ↓
+Trip Saved to Database (MySQL/TiDB)
+```
+
+---
+
+## 🔒 Security & Best Practices
+
+**No secrets are hardcoded.** All sensitive credentials—including the `GOOGLE_API_KEY`, database connection strings, and OAuth tokens—are strictly managed via environment variables loaded from a `.env` file.
+
+### Environment Variables
+- `GOOGLE_API_KEY`: Google ADK authentication token
+- `DATABASE_URL`: MySQL/TiDB connection string
+- `JWT_SECRET`: Session cookie signing secret
+- `VITE_APP_ID`: Manus OAuth application ID
+- `OAUTH_SERVER_URL`: OAuth backend base URL
+
+### Best Practices
+- ✅ All API keys stored in `.env` (never committed to version control)
+- ✅ Database credentials encrypted in transit via TLS
+- ✅ User authentication via OAuth (no password storage)
+- ✅ Session tokens signed with `JWT_SECRET`
+- ✅ CORS configured for trusted origins only
+- ✅ Input validation on all endpoints (Pydantic models)
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js 22+ and pnpm
 - Python 3.12+
-- Node.js 22.13.0+
 - MySQL/TiDB database
-- Google API credentials (for ADK integration)
 
 ### Installation
 
@@ -157,46 +125,36 @@ graph TD
    cd smart-travel-planner
    ```
 
-2. **Set up backend environment**
+2. **Install dependencies**
    ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   # Create .env file in backend directory
-   cp .env.example .env
-   
-   # Add your credentials:
-   # GOOGLE_API_KEY=your_google_api_key
-   # DATABASE_URL=your_database_url
-   # JWT_SECRET=your_jwt_secret
-   ```
-
-4. **Set up frontend**
-   ```bash
-   cd ../client
    pnpm install
    ```
 
-5. **Start development servers**
+3. **Set up environment variables**
    ```bash
-   # Terminal 1: Backend
-   cd backend
-   uvicorn main:app --reload --port 8000
-   
-   # Terminal 2: Frontend
-   cd client
+   cp .env.example .env
+   # Edit .env and add your credentials:
+   # - GOOGLE_API_KEY
+   # - DATABASE_URL
+   # - JWT_SECRET
+   # - VITE_APP_ID
+   # - OAUTH_SERVER_URL
+   ```
+
+4. **Run database migrations**
+   ```bash
+   pnpm db:push
+   ```
+
+5. **Start development server**
+   ```bash
    pnpm dev
    ```
 
-6. **Access the application**
-   - Frontend: `http://localhost:5173`
-   - Backend API: `http://localhost:8000`
-   - API Docs: `http://localhost:8000/docs`
+6. **Open in browser**
+   ```
+   http://localhost:3000
+   ```
 
 ---
 
@@ -204,99 +162,82 @@ graph TD
 
 ```
 smart-travel-planner/
-├── backend/
-│   ├── main.py                 # FastAPI application entry point
-│   ├── agents.ts              # Multi-agent orchestration logic
-│   ├── agent-progress.ts      # Real-time agent tracking service
-│   ├── pdf-generator.ts       # PDF export functionality
-│   ├── requirements.txt        # Python dependencies
-│   └── ...
-├── client/
+├── client/                    # React frontend
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── AgentNetworkStatus.tsx    # Real-time agent visualization
-│   │   │   ├── AgentMetricsDisplay.tsx   # Performance metrics dashboard
-│   │   │   ├── BudgetChart.tsx           # Interactive budget pie chart
-│   │   │   ├── ItineraryTimeline.tsx     # Collapsible day-by-day timeline
-│   │   │   ├── TripForm.tsx              # Trip planning input form
-│   │   │   └── ...
-│   │   ├── pages/
-│   │   │   ├── Home.tsx                  # Landing page with smooth scroll nav
-│   │   │   ├── TripPlanningPage.tsx      # Main planning interface
-│   │   │   ├── TripHistoryPage.tsx       # Saved trips management
-│   │   │   └── TripDetailPage.tsx        # Single trip view
-│   │   ├── App.tsx             # Main app routing
-│   │   └── index.css           # Global theme & styling
-│   ├── package.json
-│   └── ...
-├── drizzle/
-│   ├── schema.ts               # Database schema definitions
-│   └── migrations/             # Database migrations
-├── README.md
-└── .env.example
+│   │   ├── pages/            # Page components (Home, TripPlanning, History, Detail)
+│   │   ├── components/       # Reusable UI components
+│   │   ├── lib/              # tRPC client, utilities
+│   │   └── index.css         # Global styles & theme
+│   └── index.html
+├── server/                    # FastAPI backend
+│   ├── agents.ts             # Multi-agent orchestration logic
+│   ├── routers.ts            # tRPC procedure definitions
+│   ├── db.ts                 # Database query helpers
+│   ├── pdf-generator.ts      # PDF export utility
+│   └── _core/                # Framework internals
+├── drizzle/                   # Database schema & migrations
+│   └── schema.ts             # Drizzle ORM table definitions
+├── shared/                    # Shared types & constants
+├── package.json
+└── README.md
 ```
 
 ---
 
-## 🔌 API Endpoints
+## 🎯 Core Workflows
 
-### Trip Planning
-- **POST** `/api/trpc/trips.plan` - Generate a new trip plan
-- **GET** `/api/trpc/trips.list` - Retrieve user's trip history
-- **GET** `/api/trpc/trips.getById` - Get a specific trip
-- **DELETE** `/api/trpc/trips.delete` - Delete a trip
-- **POST** `/api/trpc/trips.exportPDF` - Export trip as PDF
+### Trip Planning Workflow
+1. User enters destination, duration, and budget
+2. Frontend sends request to `/api/plan-trip`
+3. Orchestrator Agent receives request and delegates:
+   - **Travel & Culture Agent**: Generates itinerary, finds hotels, curates local experiences
+   - **Logistics Agent**: Fetches weather, calculates budget allocation
+4. Results aggregated and returned to frontend
+5. User views interactive itinerary, budget chart, and hotel recommendations
+6. User can adjust budget allocations with real-time chart updates
+7. Trip saved to database for future reference
 
-### WebSocket Events
-- `agent_start` - Agent begins processing
-- `agent_update` - Agent progress update
-- `agent_complete` - Agent finished execution
-- `metrics_update` - Performance metrics update
+### Real-Time Agent Visualization
+- **AgentNetworkStatus** component displays which agent is currently "thinking"
+- Color-coded nodes (Orchestrator: purple, Travel & Culture: green, Logistics: blue)
+- Terminal log with typewriter effect shows agent communication
+- Data flow packets animate along SVG connection lines
 
 ---
 
 ## 🧪 Testing
 
+Run the test suite:
 ```bash
-# Run backend tests
-cd backend
-pytest
-
-# Run frontend tests
-cd client
 pnpm test
-
-# Run all tests
-pnpm test:all
 ```
+
+Tests cover:
+- tRPC procedure logic
+- Trip CRUD operations
+- Agent orchestration
+- Database queries
 
 ---
 
-## 📝 Environment Variables
+## 📦 Deployment
 
-Create a `.env` file in the backend directory:
+Smart Travel Planner is optimized for serverless deployment on Manus or similar platforms:
 
-```env
-# Database
-DATABASE_URL=mysql://user:password@localhost:3306/smart_travel_planner
+1. **Create a checkpoint**
+   ```bash
+   webdev_save_checkpoint
+   ```
 
-# Google API
-GOOGLE_API_KEY=your_google_api_key_here
+2. **Click "Publish" in the Manus dashboard**
 
-# Authentication
-JWT_SECRET=your_jwt_secret_here
-OAUTH_SERVER_URL=https://api.manus.im
-
-# Application
-APP_ENV=development
-DEBUG=true
-```
+3. **Your app is live** at `https://your-domain.manus.space`
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions are welcome! Please follow these guidelines:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -308,22 +249,17 @@ Contributions are welcome! Please follow these steps:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-- Built with [Google ADK](https://github.com/google/generative-ai-python) for multi-agent orchestration
-- UI components from [shadcn/ui](https://ui.shadcn.com/)
-- Animations powered by [Framer Motion](https://www.framer.com/motion/)
-- Charts by [Recharts](https://recharts.org/)
-- Database ORM by [Drizzle](https://orm.drizzle.team/)
+- **Google ADK** for the powerful multi-agent orchestration framework
+- **React & Tailwind CSS** communities for exceptional developer experience
+- **Manus** for seamless deployment and OAuth infrastructure
+- **TanStack** for industry-leading data management tools
 
 ---
 
-## 📧 Support
-
-For support, email support@smarttravelplanner.com or open an issue on GitHub.
-
-**Made with ❤️ for travelers in Penang, Malaysia**
+**Built with ❤️ for travelers who deserve better.**
