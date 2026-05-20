@@ -2,15 +2,25 @@ import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Trash2, Eye, Download } from "lucide-react";
+import { Loader2, Trash2, Eye, Download, Compass, ChevronLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import PDFExportButton from "@/components/PDFExportButton";
 
 export default function TripHistoryPage() {
   const [, setLocation] = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false);
   const { data: trips, isLoading, refetch } = trpc.trips.list.useQuery();
   const deleteTrip = trpc.trips.delete.useMutation();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleDelete = async (tripId: number) => {
     if (confirm("Are you sure you want to delete this trip?")) {
@@ -41,6 +51,36 @@ export default function TripHistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Sticky Navbar */}
+      <header className={`sticky top-0 z-50 border-b border-border/80 bg-card/40 backdrop-blur-sm transition-shadow duration-300 ${
+        isScrolled ? "shadow-md" : ""
+      }`}>
+        <div className="container flex items-center justify-between py-6">
+          <button
+            onClick={() => setLocation("/")}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            aria-label="Home"
+          >
+            <div className="h-10 w-10 rounded-2xl bg-accent/15 text-accent flex items-center justify-center">
+              <Compass className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">Generative AI</p>
+              <p className="text-lg font-semibold">Smart Travel Planner</p>
+            </div>
+          </button>
+          <Button
+            onClick={() => setLocation("/")}
+            variant="outline"
+            className="rounded-full px-6 gap-2 border-border/80 bg-card/60 hover:bg-card"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back to Home
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Content */}
       <div className="container py-12">
         <div className="mb-8">
           <h1 className="text-5xl font-black uppercase tracking-tighter text-foreground mb-2">
