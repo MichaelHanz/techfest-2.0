@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
 import { Card } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 
 interface BudgetAllocation {
   accommodation: number;
@@ -17,14 +19,33 @@ interface BudgetChartProps {
 
 export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [allocations, setAllocations] = useState<BudgetAllocation>(budgetAllocation);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const data = [
-    { name: "Accommodation", value: budgetAllocation.accommodation },
-    { name: "Food", value: budgetAllocation.food },
-    { name: "Transport", value: budgetAllocation.transport },
-    { name: "Activities", value: budgetAllocation.activities },
-    { name: "Contingency", value: budgetAllocation.contingency },
-  ].filter((item) => item.value > 0);
+  const categoryKeys: (keyof BudgetAllocation)[] = [
+    "accommodation",
+    "food",
+    "transport",
+    "activities",
+    "contingency",
+  ];
+
+  const categoryLabels: Record<keyof BudgetAllocation, string> = {
+    accommodation: "Accommodation",
+    food: "Food",
+    transport: "Transport",
+    activities: "Activities",
+    contingency: "Contingency",
+  };
+
+  const currentTotal = Object.values(allocations).reduce((sum, val) => sum + val, 0);
+
+  const data = categoryKeys
+    .map((key) => ({
+      name: categoryLabels[key],
+      value: allocations[key],
+    }))
+    .filter((item) => item.value > 0);
 
   // Bright, vibrant color palette for budget categories
   const COLORS = [
@@ -38,7 +59,7 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const value = payload[0].value;
-      const percentage = ((value / totalBudget) * 100).toFixed(1);
+      const percentage = ((value / currentTotal) * 100).toFixed(1);
       return (
         <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
           <p className="text-sm font-semibold text-foreground">{payload[0].name}</p>
@@ -59,6 +80,25 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
   // Handle mouse leave on pie segment
   const handlePieMouseLeave = () => {
     setHoveredIndex(null);
+  };
+
+  // Handle slider change for budget allocation
+  const handleSliderChange = (key: keyof BudgetAllocation, value: number) => {
+    setAllocations((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // Reset to original allocations
+  const handleReset = () => {
+    setAllocations(budgetAllocation);
+    setIsEditing(false);
+  };
+
+  // Calculate percentage for display
+  const getPercentage = (value: number) => {
+    return currentTotal > 0 ? ((value / currentTotal) * 100).toFixed(1) : "0";
   };
 
   return (
@@ -115,21 +155,36 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
             </ResponsiveContainer>
           </div>
 
-          {/* Breakdown table */}
+          {/* Breakdown table with sliders */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground mb-4">
-              Allocation Details
-            </h3>
-            {data.map((item, index) => {
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                Allocation Details
+              </h3>
+              {isEditing && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleReset}
+                  className="text-xs"
+                >
+                  Reset
+                </Button>
+              )}
+            </div>
+
+            {categoryKeys.map((key, index) => {
+              const value = allocations[key];
               const isHovered = hoveredIndex === index;
               const isNotHovered = hoveredIndex !== null && hoveredIndex !== index;
+              const percentage = getPercentage(value);
 
               return (
                 <div
-                  key={item.name}
-                  className={`space-y-1 p-3 rounded-lg border transition-all duration-200 cursor-pointer ${
+                  key={key}
+                  className={`space-y-2 p-3 rounded-lg border transition-all duration-200 ${
                     isHovered
-                      ? "bg-accent/10 border-accent/50 shadow-md scale-105"
+                      ? "bg-accent/10 border-accent/50 shadow-md"
                       : isNotHovered
                         ? "bg-muted/10 border-border/30 opacity-50"
                         : "bg-muted/20 border-border/50 hover:border-border"
@@ -150,7 +205,7 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
                           isHovered ? "text-foreground font-semibold" : "text-foreground"
                         }`}
                       >
-                        {item.name}
+                        {categoryLabels[key]}
                       </span>
                     </div>
                     <span
@@ -159,29 +214,57 @@ export default function BudgetChart({ budgetAllocation, totalBudget }: BudgetCha
                       }`}
                       style={{ color: COLORS[index % COLORS.length] }}
                     >
-                      {((item.value / totalBudget) * 100).toFixed(1)}%
+                      {percentage}%
                     </span>
                   </div>
-                  <div
-                    className={`text-xs transition-colors duration-200 ${
-                      isHovered ? "text-foreground font-medium" : "text-muted-foreground"
-                    }`}
-                  >
-                    RM {item.value.toLocaleString()}
-                  </div>
+
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <Slider
+                        value={[value]}
+                        onValueChange={(newValue) =>
+                          handleSliderChange(key, newValue[0])
+                        }
+                        min={0}
+                        max={currentTotal + 1000}
+                        step={10}
+                        className="w-full"
+                      />
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          RM {value.toLocaleString()}
+                        </span>
+                        <span className="text-muted-foreground">
+                          RM {(currentTotal + 1000).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground">
+                      RM {value.toLocaleString()}
+                    </div>
+                  )}
                 </div>
               );
             })}
 
-            <div className="pt-4 border-t border-border mt-4">
+            <div className="pt-4 border-t border-border mt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold uppercase tracking-wide text-foreground">
                   Total Budget
                 </span>
                 <span className="text-lg font-black text-accent">
-                  RM {totalBudget.toLocaleString()}
+                  RM {currentTotal.toLocaleString()}
                 </span>
               </div>
+
+              <Button
+                onClick={() => setIsEditing(!isEditing)}
+                className="w-full"
+                variant={isEditing ? "default" : "outline"}
+              >
+                {isEditing ? "Done Editing" : "Edit Budget"}
+              </Button>
             </div>
           </div>
         </div>
