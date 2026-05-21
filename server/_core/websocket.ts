@@ -19,6 +19,7 @@ export interface AgentMetrics {
 class WebSocketManager {
   private io: SocketIOServer | null = null;
   private activeConnections = new Map<string, Set<string>>();
+  private eventQueue = new Map<string, AgentProgressEvent[]>();
 
   /**
    * Initialize WebSocket server with Socket.IO
@@ -45,6 +46,15 @@ class WebSocketManager {
         }
         this.activeConnections.get(`planning:${sessionId}`)?.add(socket.id);
         console.log(`[WebSocket] Client ${socket.id} joined session ${sessionId}`);
+        
+        // Replay queued events to the newly joined client
+        const queuedEvents = this.eventQueue.get(`planning:${sessionId}`);
+        if (queuedEvents && queuedEvents.length > 0) {
+          console.log(`[WebSocket] Replaying ${queuedEvents.length} queued events to client ${socket.id}`);
+          queuedEvents.forEach((event) => {
+            socket.emit("agent_progress", event);
+          });
+        }
       });
 
       // Handle leaving a session
@@ -76,6 +86,19 @@ class WebSocketManager {
       return;
     }
 
+    // Queue event for clients that join later
+    const key = `planning:${sessionId}`;
+    if (!this.eventQueue.has(key)) {
+      this.eventQueue.set(key, []);
+    }
+    this.eventQueue.get(key)?.push(event);
+    
+    // Keep only last 100 events per session to avoid memory bloat
+    const queue = this.eventQueue.get(key);
+    if (queue && queue.length > 100) {
+      queue.shift();
+    }
+
     this.io.to(`planning:${sessionId}`).emit("agent_progress", event);
     console.log(`[WebSocket] Broadcasted ${event.type} for agent ${event.agent} to session ${sessionId}`);
   }
@@ -104,6 +127,11 @@ class WebSocketManager {
 
     this.io.to(`planning:${sessionId}`).emit("planning_complete", results);
     console.log(`[WebSocket] Broadcasted planning_complete to session ${sessionId}`);
+    
+    // Clean up event queue after a delay (keep for 30 seconds in case client reconnects)
+    setTimeout(() => {
+      this.eventQueue.delete(`planning:${sessionId}`);
+    }, 30000);
   }
 
   /**
