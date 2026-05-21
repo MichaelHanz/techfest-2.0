@@ -23,7 +23,7 @@ export const appRouter = router({
      * Plan a trip using the multi-agent orchestrator.
      * Returns sessionId immediately so client can join WebSocket room before planning starts.
      */
-    plan: protectedProcedure
+    plan: publicProcedure
       .input(
         z.object({
           destination: z.string().min(1, "Destination is required"),
@@ -39,7 +39,7 @@ export const appRouter = router({
 
         try {
           const sessionId = nanoid();
-          console.log(`[Trip Planning] Starting trip planning for user ${ctx.user.id}, sessionId: ${sessionId}`);
+          console.log(`[Trip Planning] Starting trip planning for user ${ctx.user?.id || 'anonymous'}, sessionId: ${sessionId}`);
 
           // Start planning in background without awaiting
           // This allows client to receive sessionId immediately and join WebSocket room
@@ -64,15 +64,17 @@ export const appRouter = router({
                 const budgetBreakdownJson = JSON.stringify(result.logistics.budgetAllocation);
                 const weatherJson = result.logistics.weatherOverview;
                 
-                await createTrip(
-                  ctx.user.id,
-                  destination,
-                  duration,
-                  budget,
-                  itineraryJson,
-                  budgetBreakdownJson,
-                  weatherJson
-                );
+                if (ctx.user?.id) {
+                  await createTrip(
+                    ctx.user.id,
+                    destination,
+                    duration,
+                    budget,
+                    itineraryJson,
+                    budgetBreakdownJson,
+                    weatherJson
+                  );
+                }
                 console.log(`[Trip Planning] Trip saved to database: ${tripId}`);
               } catch (dbError) {
                 console.warn(`[Trip Planning] Failed to save trip to database (non-critical):`, dbError);

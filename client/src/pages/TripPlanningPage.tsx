@@ -72,11 +72,6 @@ export default function TripPlanningPage() {
   }, []);
 
   const handlePlanTrip = async (destination: string, duration: number, budget: number) => {
-    if (!isAuthenticated) {
-      toast.error("Please sign in to plan a trip");
-      window.location.href = getLoginUrl();
-      return;
-    }
 
     setState("planning");
 
@@ -201,30 +196,7 @@ export default function TripPlanningPage() {
               transition={{ duration: 0.5 }}
               className="max-w-2xl mx-auto"
             >
-              {!isAuthenticated && (
-                <motion.div
-                  className="mb-8 p-6 bg-accent/10 border border-accent/30 rounded-lg"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="flex items-start gap-4">
-                    <LogIn className="w-5 h-5 text-accent mt-1 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-foreground mb-2">Sign in to plan your trip</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Create an account or sign in to save your travel plans and access them anytime.
-                      </p>
-                      <Button
-                        onClick={() => (window.location.href = getLoginUrl())}
-                        className="gap-2"
-                      >
-                        <LogIn className="w-4 h-4" />
-                        Sign In
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+
 
               <motion.div
                 className="mb-12"
